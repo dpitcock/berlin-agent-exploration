@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none">
+  <!-- KitKat Club official logo - eye with dynamic lines -->
+  
+  <!-- Top lines (dynamic energy) -->
+  <g>
+    <rect x="40" y="40" width="240" height="12" fill="white"/>
+    <path d="M 40 70 L 180 70 L 280 85" fill="white"/>
+    <path d="M 280 70 L 180 70 L 40 85" fill="white"/>
+  </g>
+  
+  <!-- Eye shape -->
+  <g>
+    <!-- Outer eye -->
+    <ellipse cx="160" cy="140" rx="110" ry="50" fill="white"/>
+    
+    <!-- Inner eye (black) -->
+    <ellipse cx="160" cy="140" rx="95" ry="42" fill="black"/>
+    
+    <!-- Iris -->
+    <circle cx="145" cy="140" r="35" fill="white"/>
+    
+    <!-- Pupil -->
+    <circle cx="145" cy="140" r="20" fill="black"/>
+    
+    <!-- Highlight -->
+    <circle cx="152" cy="133" r="6" fill="white"/>
+  </g>
+  
+  <!-- Bottom lines (dynamic energy) -->
+  <g>
+    <path d="M 40 155 L 180 170 L 280 170" fill="white"/>
+    <path d="M 280 155 L 180 170 L 40 170" fill="white"/>
+    <rect x="40" y="188" width="240" height="12" fill="white"/>
+  </g>
+</svg>

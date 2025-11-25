@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Sisyphus official logo - two ducks under arch -->
+  
+  <!-- Arch -->
+  <path d="M 40 280 Q 40 40 200 40 Q 360 40 360 280" stroke="white" stroke-width="6" fill="none"/>
+  
+  <!-- Platform/base -->
+  <rect x="60" y="280" width="280" height="8" fill="white"/>
+  
+  <!-- Left duck -->
+  <g>
+    <!-- Body -->
+    <ellipse cx="120" cy="230" rx="35" ry="45" fill="white"/>
+    <!-- Neck -->
+    <path d="M 135 210 Q 145 190 155 180 L 155 200 Q 150 210 140 215 Z" fill="white"/>
+    <!-- Head -->
+    <ellipse cx="160" cy="175" rx="18" ry="20" fill="white"/>
+    <!-- Beak -->
+    <path d="M 175 175 L 190 172 L 190 178 L 175 180 Z" fill="white"/>
+    <!-- Tail -->
+    <path d="M 85 235 Q 70 230 65 240 Q 70 245 80 242 Z" fill="white"/>
+    <!-- Feet -->
+    <path d="M 110 270 L 105 280 M 110 270 L 115 280" stroke="white" stroke-width="3" fill="none"/>
+    <path d="M 130 272 L 125 280 M 130 272 L 135 280" stroke="white" stroke-width="3" fill="none"/>
+  </g>
+  
+  <!-- Right duck (mirrored) -->
+  <g>
+    <!-- Body -->
+    <ellipse cx="280" cy="230" rx="35" ry="45" fill="white"/>
+    <!-- Neck -->
+    <path d="M 265 210 Q 255 190 245 180 L 245 200 Q 250 210 260 215 Z" fill="white"/>
+    <!-- Head -->
+    <ellipse cx="240" cy="175" rx="18" ry="20" fill="white"/>
+    <!-- Beak -->
+    <path d="M 225 175 L 210 172 L 210 178 L 225 180 Z" fill="white"/>
+    <!-- Tail -->
+    <path d="M 315 235 Q 330 230 335 240 Q 330 245 320 242 Z" fill="white"/>
+    <!-- Feet -->
+    <path d="M 290 270 L 295 280 M 290 270 L 285 280" stroke="white" stroke-width="3" fill="none"/>
+    <path d="M 270 272 L 275 280 M 270 272 L 265 280" stroke="white" stroke-width="3" fill="none"/>
+  </g>
+</svg>

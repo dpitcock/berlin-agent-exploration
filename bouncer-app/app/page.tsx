@@ -1,0 +1,425 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import Image from 'next/image';
+
+type Club = 'Berghain' | 'KitKat' | 'Sisyphus' | null;
+
+interface Verdict {
+  verdict: 'ACCEPT' | 'REJECT' | 'ERROR';
+  message: string;
+  club: string;
+}
+
+export default function Home() {
+  const [selectedClub, setSelectedClub] = useState<Club>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clubs = [
+    {
+      name: 'Berghain' as Club,
+      tagline: 'TECHNO TEMPLE',
+      description: 'All black. No smiles. No mercy.',
+      logo: '/logos/berghain.svg',
+      accentColor: 'from-gray-900 to-black',
+      borderColor: 'border-white/20',
+      hoverBorderColor: 'hover:border-white/50',
+      shadowColor: 'shadow-white/10',
+      hoverShadowColor: 'hover:shadow-white/30',
+      activeShadowColor: 'active:shadow-white/50',
+    },
+    {
+      name: 'KitKat' as Club,
+      tagline: 'FETISH PLAYGROUND',
+      description: 'Leather. Latex. Liberation.',
+      logo: '/logos/kitkat.svg',
+      accentColor: 'from-pink-600 to-purple-600',
+      borderColor: 'border-pink-500/20',
+      hoverBorderColor: 'hover:border-pink-500/50',
+      shadowColor: 'shadow-pink-500/10',
+      hoverShadowColor: 'hover:shadow-pink-500/40',
+      activeShadowColor: 'active:shadow-pink-500/60',
+    },
+    {
+      name: 'Sisyphus' as Club,
+      tagline: 'RAVE UTOPIA',
+      description: 'Color. Chaos. Creativity.',
+      logo: '/logos/sisyphus.svg',
+      accentColor: 'from-cyan-500 to-blue-500',
+      borderColor: 'border-cyan-500/20',
+      hoverBorderColor: 'hover:border-cyan-500/50',
+      shadowColor: 'shadow-cyan-500/10',
+      hoverShadowColor: 'hover:shadow-cyan-500/40',
+      activeShadowColor: 'active:shadow-cyan-500/60',
+    },
+  ];
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedClub || !imageFile) return;
+
+    setIsSubmitting(true);
+    setVerdict(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('club', selectedClub);
+      formData.append('photo', imageFile);
+
+      const response = await fetch('/api/judge', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      setVerdict(data);
+    } catch (error) {
+      console.error('Error:', error);
+      setVerdict({
+        verdict: 'ERROR',
+        message: 'System malfunction. The bouncer stepped out for a smoke.',
+        club: selectedClub,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedClub(null);
+    setUploadedImage(null);
+    setImageFile(null);
+    setVerdict(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Industrial grid background */}
+      <div className="absolute inset-0 industrial-grid opacity-50" />
+
+      {/* Scanlines effect */}
+      <div className="absolute inset-0 scanlines pointer-events-none" />
+
+      {/* Disco ball ambient lights */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] disco-ball" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] disco-ball" style={{ animationDelay: '1.5s' }} />
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-7xl">
+        {/* Header */}
+        <header className="text-center mb-12 sm:mb-16 lg:mb-20">
+          <div className="inline-block mb-4 sm:mb-6">
+            <div className="text-xs sm:text-sm font-mono tracking-widest text-cyan-400 mb-2 sm:mb-3 neon-cyan">
+              BERLIN UNDERGROUND
+            </div>
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-black tracking-tighter mb-3 sm:mb-4 chrome-text font-['Orbitron']">
+              CLUB BOUNCER
+            </h1>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/50 to-transparent mb-3 sm:mb-4" />
+            <p className="text-base sm:text-lg lg:text-xl text-gray-400 font-light tracking-wide">
+              AI-Powered Door Selection System
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-gray-600 font-mono">
+            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
+            <span>SYSTEM ONLINE</span>
+            <span className="text-gray-800">|</span>
+            <span>POWERED BY n8n + OpenAI</span>
+          </div>
+        </header>
+
+        {!verdict ? (
+          <>
+            {/* Club Selection */}
+            <section className="mb-12 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+                SELECT YOUR <span className="neon-cyan">DESTINATION</span>
+              </h2>
+
+              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 max-w-[1600px] mx-auto px-4">
+                {clubs.map((club) => (
+                  <button
+                    key={club.name}
+                    onClick={() => setSelectedClub(club.name)}
+                    className={`
+                      group relative overflow-hidden
+                      rounded-[2rem] p-6 sm:p-8 m-2
+                      transition-all duration-300 ease-out
+                      transform
+                      max-w-[500px] mx-auto w-full
+                      aspect-square
+                      flex flex-col items-center justify-center
+                      border-2
+                      bg-[#1a1a1a]
+                      ${selectedClub === club.name
+                        ? `
+                          border-white/30
+                          shadow-[0_0_50px_rgba(255,255,255,0.15)]
+                          scale-105 -translate-y-1
+                        `
+                        : `
+                          border-white/10
+                          shadow-lg
+                          hover:border-white/20
+                          hover:scale-[1.02]
+                          hover:-translate-y-0.5
+                          active:border-cyan-500/50
+                          active:shadow-[0_0_40px_rgba(0,255,255,0.3)]
+                          active:scale-100
+                          active:translate-y-0
+                        `
+                      }
+                      ${selectedClub && selectedClub !== club.name ? 'opacity-30 blur-[1px]' : ''}
+                    `}
+                  >
+                    {/* Logo */}
+                    <div className={`
+                      relative mb-6 sm:mb-8 h-20 sm:h-24 w-full flex items-center justify-center transition-all duration-300
+                      group-hover:scale-105 group-active:scale-95
+                      ${selectedClub === club.name ? 'neon-cyan drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]' : ''}
+                      group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]
+                    `}>
+                      <Image
+                        src={club.logo}
+                        alt={`${club.name} logo`}
+                        width={200}
+                        height={100}
+                        className="w-auto h-full object-contain"
+                        priority
+                      />
+                    </div>
+
+                    {/* Club Name */}
+                    <h3
+                      className={`
+                        text-2xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white
+                        ${selectedClub === club.name ? 'neon-cyan' : ''}
+                        group-active:neon-cyan
+                      `}
+                      style={{ color: 'white' }}
+                    >
+                      {club.name}
+                    </h3>
+
+                    {/* Tagline */}
+                    <div
+                      className="text-sm font-mono tracking-[0.2em] mb-4 !text-gray-300 group-hover:!text-white transition-colors"
+                      style={{ color: '#d1d5db' }}
+                    >
+                      {club.tagline}
+                    </div>
+
+                    {/* Description */}
+                    <p
+                      className="text-sm leading-relaxed max-w-[85%] text-center font-light !text-gray-400 group-hover:!text-gray-200 transition-colors"
+                      style={{ color: '#9ca3af' }}
+                    >
+                      {club.description}
+                    </p>
+
+                    {/* Large Glowing Checkmark */}
+                    {selectedClub === club.name && (
+                      <div className="absolute top-6 right-6 animate-in zoom-in-50 duration-300">
+                        <div className="w-[50px] h-[50px] rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.8)] flex items-center justify-center">
+                          <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Photo Upload */}
+            {selectedClub && (
+              <section className="mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+                  UPLOAD YOUR <span className="neon-pink">OUTFIT</span>
+                </h2>
+
+                <div className="max-w-2xl mx-auto">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                      relative club-card p-8 sm:p-12 lg:p-16 text-center cursor-pointer
+                      transition-all duration-300 rounded-2xl
+                      border-2 border-dashed
+                      ${uploadedImage
+                        ? 'border-cyan-500/50 bg-cyan-500/5'
+                        : 'border-white/20 hover:border-white/40 hover:bg-white/5'
+                      }
+                    `}
+                  >
+                    {uploadedImage ? (
+                      <div className="relative">
+                        <div className="relative w-full max-w-md mx-auto rounded-xl overflow-hidden border-2 border-white/20">
+                          <Image
+                            src={uploadedImage}
+                            alt="Your outfit"
+                            width={600}
+                            height={600}
+                            className="w-full h-auto object-contain max-h-[400px]"
+                          />
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadedImage(null);
+                            setImageFile(null);
+                            if (fileInputRef.current) fileInputRef.current.value = '';
+                          }}
+                          className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110"
+                        >
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6">📸</div>
+                        <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 font-['Orbitron']">
+                          CAPTURE OR UPLOAD
+                        </p>
+                        <p className="text-sm sm:text-base text-gray-500 font-mono">
+                          JPG, PNG, WEBP • MAX 10MB
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 font-mono">
+                          📱 Mobile: Take photo directly from camera
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Submit Button */}
+            {selectedClub && uploadedImage && (
+              <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={`
+                    group relative px-8 sm:px-12 lg:px-16 py-4 sm:py-5 lg:py-6 
+                    rounded-full text-base sm:text-lg lg:text-xl font-black
+                    transition-all duration-300 font-['Orbitron'] tracking-wide
+                    ${isSubmitting
+                      ? 'bg-gray-800 cursor-not-allowed opacity-50'
+                      : 'btn-chrome text-black hover:scale-105 glitch'
+                    }
+                  `}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-3">
+                      <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                      ANALYZING...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      FACE THE BOUNCER
+                      <span className="text-2xl">🚪</span>
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          /* Verdict Display */
+          <section className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-700">
+            <div
+              className={`
+                relative rounded-3xl p-8 sm:p-12 lg:p-16 text-center overflow-hidden
+                ${verdict.verdict === 'ACCEPT'
+                  ? 'bg-gradient-to-br from-green-600 to-emerald-700 border-2 border-green-400/50'
+                  : verdict.verdict === 'REJECT'
+                    ? 'bg-gradient-to-br from-red-600 to-rose-700 border-2 border-red-400/50'
+                    : 'bg-gradient-to-br from-gray-700 to-gray-900 border-2 border-gray-500/50'
+                }
+              `}
+            >
+              {/* Animated background effect */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+              </div>
+
+              <div className="relative z-10">
+                <div className="text-7xl sm:text-8xl lg:text-9xl mb-6 sm:mb-8 animate-bounce">
+                  {verdict.verdict === 'ACCEPT' ? '✅' : verdict.verdict === 'REJECT' ? '❌' : '⚠️'}
+                </div>
+
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 sm:mb-6 font-['Orbitron'] tracking-tighter">
+                  {verdict.verdict === 'ACCEPT' ? 'WELCOME IN' : verdict.verdict === 'REJECT' ? 'REJECTED' : 'ERROR'}
+                </h2>
+
+                <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-light leading-relaxed text-balance">
+                    {verdict.message}
+                  </p>
+                </div>
+
+                <div className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black/30 rounded-full mb-6 sm:mb-8">
+                  <span className="text-xs sm:text-sm font-mono text-gray-300">
+                    CLUB: <span className="font-bold text-white">{verdict.club}</span>
+                  </span>
+                </div>
+
+                <button
+                  onClick={resetForm}
+                  className="btn-chrome text-black px-8 sm:px-10 lg:px-12 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 hover:scale-105 glitch font-['Orbitron']"
+                >
+                  TRY ANOTHER CLUB 🔄
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Footer */}
+        <footer className="mt-16 sm:mt-20 lg:mt-24 text-center">
+          <div className="inline-block">
+            <div className="h-px w-64 bg-gradient-to-r from-transparent via-white/30 to-transparent mb-6" />
+            <p className="text-xs sm:text-sm text-gray-600 font-mono mb-2">
+              BUILT WITH NEXT.JS • n8n • OPENAI VISION
+            </p>
+            <p className="text-xs text-gray-700 font-mono">
+              A SATIRICAL AI AGENT FOR THE AGENT ROAST SHOW
+            </p>
+            <div className="mt-4 text-xs text-gray-800 font-mono">
+              BERLIN UNDERGROUND
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}

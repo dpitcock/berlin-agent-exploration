@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 370 200" fill="none">
+  <!-- Berghain official logo - three interlocking squares -->
+  <!-- Left bracket -->
+  <path d="M 50 40 L 140 40 L 140 80 L 110 80 L 110 120 L 140 120 L 140 160 L 50 160 L 50 120 L 80 120 L 80 80 L 50 80 Z" fill="white"/>
+  
+  <!-- Center square -->
+  <path d="M 155 75 L 215 75 L 215 125 L 155 125 Z M 175 95 L 175 105 L 195 105 L 195 95 Z" fill="white" fill-rule="evenodd"/>
+  
+  <!-- Right bracket -->
+  <path d="M 230 40 L 320 40 L 320 80 L 290 80 L 290 120 L 320 120 L 320 160 L 230 160 L 230 120 L 260 120 L 260 80 L 230 80 Z" fill="white"/>
+</svg>
