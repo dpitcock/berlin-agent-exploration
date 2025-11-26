@@ -63,6 +63,8 @@ const MOCK_RESPONSES = {
   },
 };
 
+export const maxDuration = 60; // Allow up to 60 seconds for AI processing
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -134,28 +136,43 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const base64Image = buffer.toString('base64');
 
-    // Send to n8n webhook
-    const n8nResponse = await fetch(n8nWebhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        club,
-        image: {
-          data: base64Image,
-          mimeType: photo.type,
-          filename: photo.name,
+    // Send to n8n webhook with 60s timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const n8nResponse = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        body: JSON.stringify({
+          club,
+          image: {
+            data: base64Image,
+            mimeType: photo.type,
+            filename: photo.name,
+          },
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
 
-    if (!n8nResponse.ok) {
-      throw new Error(`n8n webhook failed: ${n8nResponse.statusText}`);
+      if (!n8nResponse.ok) {
+        const errorText = await n8nResponse.text();
+        console.error(`n8n webhook failed (${n8nResponse.status}): ${errorText}`);
+        throw new Error(`n8n webhook failed: ${n8nResponse.status} ${n8nResponse.statusText}`);
+      }
+
+      const verdict = await n8nResponse.json();
+      return NextResponse.json(verdict);
+    } catch (fetchError: unknown) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        throw new Error('n8n webhook timed out after 60 seconds');
+      }
+      throw fetchError;
     }
-
-    const verdict = await n8nResponse.json();
-    return NextResponse.json(verdict);
   } catch (error) {
     console.error('Error processing request:', error);
     return NextResponse.json(

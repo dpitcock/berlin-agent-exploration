@@ -60,6 +60,14 @@ const imageData = $input.item.json.body.image;
 // Convert base64 to binary for OpenAI
 const buffer = Buffer.from(imageData.data, 'base64');
 
+// VALIDATION: Check image size (limit to 10MB)
+const MAX_SIZE_MB = 10;
+const sizeInMB = buffer.length / (1024 * 1024);
+
+if (sizeInMB > MAX_SIZE_MB) {
+  throw new Error(`Image is too large (${sizeInMB.toFixed(2)}MB). Max allowed is ${MAX_SIZE_MB}MB.`);
+}
+
 return [{
   json: {
     club: club,
@@ -140,11 +148,23 @@ Examples:
 
 ```javascript
 // Get club from previous node
-const club = $('Parse Input').item.json.club;
+const club = $('Parse Input').first().json.club;
 
 // Parse AI validation response
-const aiResponse = $input.item.json.choices[0].message.content;
-const validation = JSON.parse(aiResponse);
+const aiResponseRaw = $input.first().json.output[0].content[0].text;
+// Locate first and last bracket positions for JSON extraction
+const jsonStart = aiResponseRaw.indexOf('{');
+const jsonEnd = aiResponseRaw.lastIndexOf('}');
+
+// Extract just the JSON substring
+if (jsonStart === -1 || jsonEnd === -1) {
+  throw new Error('JSON braces not found in AI response');
+}
+
+const jsonString = aiResponseRaw.substring(jsonStart, jsonEnd + 1).trim();
+
+// Parse JSON safely
+const validation = JSON.parse(jsonString);
 
 // Check if photo is invalid
 if (!validation.valid) {
@@ -173,6 +193,7 @@ return [{
   json: {
     club: club,
     peopleCount: validation.peopleCount,
+    subjectType: validation.subjectType,
     photoValid: true
   }
 }];

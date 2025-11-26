@@ -1,0 +1,22 @@
+{
+    "name": "n8n-berlin-bouncer",
+    "version": "1.0.0",
+    "description": "Berlin Club Bouncer AI - n8n workflow testing",
+    "private": true,
+    "scripts": {
+        "test:webhook": "node test-webhook.js",
+        "test:webhook:berghain": "node test-webhook.js Berghain",
+        "test:webhook:kitkat": "node test-webhook.js KitKat",
+        "test:webhook:sisyphus": "node test-webhook.js Sisyphus",
+        "test:bash": "./test-webhook.sh"
+    },
+    "keywords": [
+        "n8n",
+        "webhook",
+        "ai",
+        "berlin",
+        "bouncer"
+    ],
+    "author": "",
+    "license": "MIT"
+}

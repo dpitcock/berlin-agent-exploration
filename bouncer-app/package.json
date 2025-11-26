@@ -10,7 +10,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check-env": "node scripts/check-env.js"
+    "check-env": "node scripts/check-env.js",
+    "test:webhook": "node ../test-webhook.js",
+    "test:webhook:berghain": "node ../test-webhook.js Berghain",
+    "test:webhook:kitkat": "node ../test-webhook.js KitKat",
+    "test:webhook:sisyphus": "node ../test-webhook.js Sisyphus",
+    "test:bash": "../test-webhook.sh"
   },
   "dependencies": {
     "next": "16.0.4",
