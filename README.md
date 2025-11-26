@@ -79,8 +79,8 @@ This project uses a **modern hybrid approach** that showcases both UI/UX skills 
 Follow the detailed guide: **[N8N_WORKFLOW_SETUP.md](./N8N_WORKFLOW_SETUP.md)**
 
 Quick version:
-1. Create n8n workflow with Webhook trigger
-2. Add OpenAI nodes for photo validation and club-specific judging
+1. Import the included workflow: **[berlin-club-bouncer-n8n-workflow.json](./berlin-club-bouncer-n8n-workflow.json)**
+2. Add your OpenAI credentials
 3. Copy your webhook URL
 
 #### 2️⃣ Deploy Web App to Vercel

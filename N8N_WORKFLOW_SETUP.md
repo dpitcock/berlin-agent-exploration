@@ -22,7 +22,19 @@ Webhook Trigger → Photo Validation → Club Router → Club-Specific Judge →
 ---
 
 ## Step 1: Create n8n Workflow
-
+ 
+### Option A: Import Existing Workflow (Recommended)
+ 
+1. Log into your n8n instance
+2. Click **Workflows** → **Add workflow**
+3. Click the **three dots** (⋮) in the top right corner
+4. Select **Import from File**
+5. Upload `berlin-club-bouncer-n8n-workflow.json` from this repository
+6. Add your OpenAI credentials (see Step 4)
+7. Save and Activate!
+ 
+### Option B: Build from Scratch
+ 
 1. Log into your n8n instance
 2. Click **Workflows** → **Add workflow**
 3. Name it: `Berlin Club Bouncer`
@@ -147,8 +159,9 @@ Examples:
 5. Add this code:
 
 ```javascript
-// Get club from previous node
+// Get club and image date from previous node
 const club = $('Parse Input').first().json.club;
+const imageData = $('Parse Input').first().binary
 
 // Parse AI validation response
 const aiResponseRaw = $input.first().json.output[0].content[0].text;
@@ -194,7 +207,8 @@ return [{
     club: club,
     peopleCount: validation.peopleCount,
     subjectType: validation.subjectType,
-    photoValid: true
+    photoValid: true,
+    ...imageData
   }
 }];
 ```
@@ -228,8 +242,9 @@ Create **three OpenAI nodes**, one for each club:
    - **Credential**: Your OpenAI credential
    - **Resource**: Image
    - **Operation**: Analyze Image
-   - **Model**: `gpt-4o`
+   - **Model**: `gpt-4o-mini`
    - **Input Data Field Name**: `photo`
+   - **Simplify output**: false
    - **Text Input**: 
 
 ```
@@ -296,7 +311,7 @@ Respond in JSON format:
   "reasoning": "2-3 sentence witty, provocative explanation. Be playful and edgy, but not crude. Channel sex-positive Berlin nightlife energy."
 }
 
-Be selective but fair. Reward creativity and confidence.
+Be selective but fair. Reward creativity and confidence. Remember you have a German accent so let the response be in some German-English hybrid language understandable to all.
 ```
 
 ### 8c. Sisyphus Judge
@@ -334,7 +349,7 @@ Respond in JSON format:
   "reasoning": "2-3 sentence friendly but honest explanation. Be encouraging to creative souls, but call out boring vibes. Channel inclusive rave culture energy."
 }
 
-Be welcoming to creativity, but don't let in the uninspired. You reject about 75% of people.
+Be welcoming to creativity, but don't let in the uninspired. You reject about 75% of people. Remember you have a German accent so let the response be in some German-English hybrid language understandable to all
 ```
 
 ---
@@ -358,12 +373,25 @@ Be welcoming to creativity, but don't let in the uninspired. You reject about 75
 5. Add this code:
 
 ```javascript
-// Parse the AI judge response
-const aiResponse = $input.item.json.choices[0].message.content;
-const judgment = JSON.parse(aiResponse);
+// Get the AI response text
+let aiResponse = $input.first().json.output[0].content[0].text;
 
-// Get club name from earlier in the workflow
-const club = $('Parse Input').item.json.club;
+// Remove markdown code blocks if present
+aiResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+// Extract JSON from the response
+const jsonStart = aiResponse.indexOf('{');
+const jsonEnd = aiResponse.lastIndexOf('}');
+
+if (jsonStart === -1 || jsonEnd === -1) {
+  throw new Error('JSON braces not found in AI response');
+}
+
+const jsonString = aiResponse.substring(jsonStart, jsonEnd + 1).trim();
+const judgment = JSON.parse(jsonString);
+
+// Get club name from Check Validation node
+const club = $('Check Validation').first().json.club;
 
 // Format the response to send back to the web app
 return [{

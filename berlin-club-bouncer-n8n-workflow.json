@@ -1,0 +1,412 @@
+{
+  "name": "Berlin Club Bouncer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "berlin-bouncer",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        608
+      ],
+      "id": "74dcd590-37fb-4db1-8e93-f2a6eb534c47",
+      "name": "Webhook",
+      "webhookId": "1a7c790f-dba5-459e-9a62-8634182b3044"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from webhook\nconst club = $input.item.json.body.club;\nconst imageData = $input.item.json.body.image;\n\n// Convert base64 to binary for OpenAI\nconst buffer = Buffer.from(imageData.data, 'base64');\n\nreturn [{\n  json: {\n    club: club,\n    imageData: imageData\n  },\n  binary: {\n    photo: {\n      data: buffer.toString('base64'),\n      mimeType: imageData.mimeType,\n      fileName: imageData.filename\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        608
+      ],
+      "id": "7fa7f869-1611-4e70-b75d-f553052b5317",
+      "name": "Parse Input"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Analyze this photo or image and determine if it is valid for club entry judgment. You are a polite but grumpy authoritative club bouncer who hates to be bothered doing his job.\n\nCheck:\n1. Does the image contain at least one person OR a human-like character (e.g. illustrated, animated, AI-generated, or cartoon-style) OR or personified/anthropomorphic animals wearing outfits? (If no, reject)\n2. How many valid human or human-like subjects are visible?\n3. If it's a group image, are ALL outfits fully visible? (If not, reject)\n4. Determine the type of subjects: \"real\", \"illustrated\", \"animated\", \"AI-generated\", or \"unknown\".\n5. Reject if the subjects are too abstract, non-human, or clothing visibility cannot be judged.\"\n\nReturn ONLY valid JSON in this exact format:\n{\n  \"valid\": true or false,\n  \"peopleCount\": number,\n  \"allOutfitsVisible\": true or false,\n  \"subjectType\": \"real\" | \"illustrated\" | \"animated\" | \"AI-generated\" |  \"personified_animal\" | \"unknown\",\n  \"rejectReason\": \"funny message if invalid, empty string if valid\"\n}\n\nExamples:\n- No people: {\"valid\": false, \"peopleCount\": 0, \"allOutfitsVisible\": false, \"subjectType\": \"unknown\", \"rejectReason\": \"No humans detected. Try partying with your coat rack instead.\"}\n- Group with hidden outfits: {\"valid\": false, \"peopleCount\": 3, \"allOutfitsVisible\": false, \"subjectType\": \"real\", \"rejectReason\": \"Not all outfits are visible. Can't judge invisible fashion!\"}\n- Valid solo human: {\"valid\": true, \"peopleCount\": 1, \"allOutfitsVisible\": true, \"subjectType\": \"real\", \"rejectReason\": \"\"}\n- Valid illustrated character: {\"valid\": true, \"peopleCount\": 1, \"allOutfitsVisible\": true, \"subjectType\": \"illustrated\", \"rejectReason\": \"\"}\n- Valid personified animal: {\"valid\": true, \"peopleCount\": 1, \"allOutfitsVisible\": true, \"subjectType\": \"personified_animal\", \"rejectReason\": \"\"}\n- Abstract art: {\"valid\": false, \"peopleCount\": 0, \"allOutfitsVisible\": false, \"subjectType\": \"unknown\", \"rejectReason\": \"Is this modern art or alien couture? No judgment possible.\"}",
+        "inputType": "base64",
+        "binaryPropertyName": "photo",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        704,
+        608
+      ],
+      "id": "41bb39dc-95ab-449a-b704-8cf9978a4ce5",
+      "name": "Photo Validation",
+      "credentials": {
+        "openAiApi": {
+          "id": "BL450Q7UkNJJr3JU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get club from previous node\nconst club = $('Parse Input').first().json.club;\nconst binaryData = $('Parse Input').first().binary;\n\n// Parse AI validation response\nconst aiResponseRaw = $input.first().json.output[0].content[0].text;\nconst jsonStart = aiResponseRaw.indexOf('{');\nconst jsonEnd = aiResponseRaw.lastIndexOf('}');\n\nif (jsonStart === -1 || jsonEnd === -1) {\n  throw new Error('JSON braces not found in AI response');\n}\n\nconst jsonString = aiResponseRaw.substring(jsonStart, jsonEnd + 1).trim();\nconst validation = JSON.parse(jsonString);\n\n// Check if photo is invalid\nif (!validation.valid) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: validation.rejectReason,\n      club: club\n    }\n  }];\n}\n\n// Berghain special rule: reject groups of 3+\nif (club === 'Berghain' && validation.peopleCount > 2) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: \"Berghain doesn't do groups of 3+. This isn't a tourist bus. Come back with one friend max, or solo.\",\n      club: club\n    }\n  }];\n}\n\n// Photo is valid, continue to club-specific judge\nreturn [{\n  json: {\n    club: club,\n    peopleCount: validation.peopleCount,\n    subjectType: validation.subjectType,\n    photoValid: true\n  },\n  binary: binaryData\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        608
+      ],
+      "id": "d5c3d43f-dd9f-49f1-89d0-58a8e04300d8",
+      "name": "Check Validation"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "27e87a8d-dd6e-4c3f-90c9-03abe83649e7",
+                    "leftValue": "=`{{ $json.club }}`",
+                    "rightValue": "`Berghain`",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f7598321-5836-48d1-961c-2478a5076fde",
+                    "leftValue": "=`{{ $json.club }}`",
+                    "rightValue": "`KitKat`",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9558373c-958b-4b44-b2ad-29d23f7ec02c",
+                    "leftValue": "=`{{ $json.club }}`",
+                    "rightValue": "`Sisyphus`",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1152,
+        592
+      ],
+      "id": "0e57f2fc-2505-459c-89cf-9f86b64eeb84",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "You are the legendary Berghain bouncer, known for being impossibly strict and rejecting 90% of people. You judge based on pure techno culture: all black, no smiles, no colors, industrial vibes only.\n\nAssume this universe allows humans, illustrated or animated characters, AI-generated personas, and personified/anthropomorphic animals to exist alongside each other, party, and converse at Berghain.\n\nAnalyze this photo of someone trying to enter Berghain.\n\nSTRICT RULES:\n- Groups of 3+ are INSTANTLY REJECTED (already filtered, but reinforce)\n- Any bright colors = reject\n- Smiling or happy faces = reject\n- Casual tourist clothing = reject\n- Visible logos/branding = reject\n\nACCEPT criteria:\n- All black outfit\n- Industrial/leather/harness aesthetic\n- Serious, stoic expression\n- Minimal techno vibe\n\nRespond in JSON format:\n{\n  \"verdict\": \"ACCEPT\" or \"REJECT\",\n  \"reasoning\": \"2-3 sentence harsh but witty explanation in the voice of a jaded Berghain bouncer. Be creative and funny, but brutal.\"\n}\n\nRemember: You reject 90% of people. Be extremely picky. Make it hurt. You have a German accent so let the response be in some German-English hybrid language understandable to all",
+        "inputType": "base64",
+        "binaryPropertyName": "photo",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        416
+      ],
+      "id": "8563dbbd-7c51-4369-9b13-f10631befe7e",
+      "name": "Berghain Bouncer",
+      "credentials": {
+        "openAiApi": {
+          "id": "BL450Q7UkNJJr3JU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "You are the KitKat Club bouncer, guardian of Berlin's most notorious fetish party. You value creativity, confidence, and provocative fashion. This is a sex-positive, boundary-pushing space.\n\nAssume this universe allows humans, illustrated or animated characters, AI-generated personas, and personified/anthropomorphic animals to exist alongside each other, party, and converse at KitKat.\n\nAnalyze this photo of someone trying to enter KitKat.\n\nACCEPT criteria:\n- Fetish wear: leather, latex, harnesses, bondage-inspired\n- Bold, provocative outfits\n- Creative, edgy fashion\n- Confident energy\n- Skin showing in a tasteful, provocative way\n\nREJECT criteria:\n- Boring, conservative clothing\n- \"Normal\" nightclub outfits\n- Prudish or timid presentation\n- Lack of edge or creativity\n- If you think they have other outfits they intend to change into once indoors\n- Not enough skin showing\n\nRespond in JSON format:\n{\n  \"verdict\": \"ACCEPT\" or \"REJECT\",\n  \"reasoning\": \"2-3 sentence witty, provocative explanation. Be playful and edgy, but not crude. Channel sex-positive Berlin nightlife energy.\"\n}\n\nBe selective but fair. Reward creativity and confidence. Remember you have a German accent so let the response be in some German-English hybrid language understandable to all",
+        "inputType": "base64",
+        "binaryPropertyName": "photo",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        608
+      ],
+      "id": "78e97841-2964-41e2-9d2c-af4a7ef5220c",
+      "name": "KitKat Bouncer",
+      "credentials": {
+        "openAiApi": {
+          "id": "BL450Q7UkNJJr3JU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "You are the Sisyphus bouncer, welcoming creative souls to Berlin's most artistic rave space. You value self-expression, color, creativity, and good vibes. This is a place for artists, ravers, and free spirits.\n\nAssume this universe allows humans, illustrated or animated characters, AI-generated personas, and personified/anthropomorphic animals to exist alongside each other, party, and converse at Berghain.\n\nAnalyze this photo of someone trying to enter Sisyphus.\n\nACCEPT criteria:\n- Colorful, artistic outfits\n- Rave wear: neon, patterns, creative makeup, festival vibes\n- Unique, DIY, handmade pieces\n- Playful, expressive, creative energy\n- Bohemian, artistic aesthetic\n\nREJECT criteria:\n- Boring, plain, uninspired clothing\n- Corporate or business casual\n- No smiles, enthusiasm to get in\n- Zero creativity or effort\n- \"Just came from work\" vibes\n- Start every rejection with \"Not today\"\n\nRespond in JSON format:\n{\n  \"verdict\": \"ACCEPT\" or \"REJECT\",\n  \"reasoning\": \"2-3 sentence friendly but honest explanation. Be encouraging to creative souls, but call out boring vibes. Channel inclusive rave culture energy.\"\n}\n\nBe welcoming to creativity, but don't let in the uninspired. You reject about 75% of people. Remember you have a German accent so let the response be in some German-English hybrid language understandable to all",
+        "inputType": "base64",
+        "binaryPropertyName": "photo",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        800
+      ],
+      "id": "59aa5df8-fb70-47ac-9187-8f6af6c61fd6",
+      "name": "Sisyphus Bouncer",
+      "credentials": {
+        "openAiApi": {
+          "id": "BL450Q7UkNJJr3JU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1600,
+        592
+      ],
+      "id": "43179475-cfb0-4e89-8fa3-566193987f4e",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the AI response text\nlet aiResponse = $input.first().json.output[0].content[0].text;\n\n// Remove markdown code blocks if present\naiResponse = aiResponse.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\n// Extract JSON from the response\nconst jsonStart = aiResponse.indexOf('{');\nconst jsonEnd = aiResponse.lastIndexOf('}');\n\nif (jsonStart === -1 || jsonEnd === -1) {\n  throw new Error('JSON braces not found in AI response');\n}\n\nconst jsonString = aiResponse.substring(jsonStart, jsonEnd + 1).trim();\nconst judgment = JSON.parse(jsonString);\n\n// Get club name from Check Validation node\nconst club = $('Check Validation').first().json.club;\n\n// Format the response to send back to the web app\nreturn [{\n  json: {\n    verdict: judgment.verdict,\n    message: judgment.reasoning,\n    club: club\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        608
+      ],
+      "id": "f50b9f0f-d257-4cfa-bc7c-cf8fa4d9ca58",
+      "name": "Format Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "Photo Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Photo Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Berghain Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "KitKat Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sisyphus Bouncer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Berghain Bouncer": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KitKat Bouncer": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Sisyphus Bouncer": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "118514c6-7129-4295-baec-e88c9b8baa8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a692c226ff7ba86dd8d5b11115fba7d0f06be995033cb5c5d1f2729b7ff73ba"
+  },
+  "id": "hbcnWrFJeYs6xcQN",
+  "tags": []
+}
