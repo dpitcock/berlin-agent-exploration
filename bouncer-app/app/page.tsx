@@ -22,6 +22,7 @@ export default function Home() {
   const [isMockMode, setIsMockMode] = useState(false);
   const [mockFailure, setMockFailure] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const clubs = [
     {
@@ -311,7 +312,7 @@ export default function Home() {
               >
                 {/* Logo */}
                 <div className={`
-                  relative mb-6 sm:mb-8 h-20 sm:h-24 w-full flex items-center justify-center transition-all duration-300
+                  relative mb-4 sm:mb-6 md:mb-8 h-16 sm:h-20 md:h-24 w-full flex items-center justify-center transition-all duration-300
                   group-hover:scale-105 group-active:scale-95
                   ${selectedClub === club.name ? 'neon-cyan drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]' : ''}
                   group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]
@@ -329,7 +330,7 @@ export default function Home() {
                 {/* Club Name */}
                 <h3
                   className={`
-                    text-2xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white
+                    text-xl sm:text-2xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white
                     ${selectedClub === club.name ? 'neon-cyan' : ''}
                     group-active:neon-cyan
                   `}
@@ -340,7 +341,7 @@ export default function Home() {
 
                 {/* Tagline */}
                 <div
-                  className="text-sm font-mono tracking-[0.2em] mb-4 !text-gray-300 group-hover:!text-white transition-colors"
+                  className="text-xs sm:text-sm font-mono tracking-[0.2em] mb-3 sm:mb-4 !text-gray-300 group-hover:!text-white transition-colors"
                   style={{ color: '#d1d5db' }}
                 >
                   {club.tagline}
@@ -348,7 +349,7 @@ export default function Home() {
 
                 {/* Description */}
                 <p
-                  className="text-sm leading-relaxed max-w-[85%] text-center font-light !text-gray-400 group-hover:!text-gray-200 transition-colors"
+                  className="text-xs sm:text-sm leading-relaxed max-w-[85%] text-center font-light !text-gray-400 group-hover:!text-gray-200 transition-colors"
                   style={{ color: '#9ca3af' }}
                 >
                   {club.description}
@@ -357,8 +358,8 @@ export default function Home() {
                 {/* Large Glowing Checkmark */}
                 {selectedClub === club.name && (
                   <div className="absolute top-6 right-6 animate-in zoom-in-50 duration-300">
-                    <div className="w-[50px] h-[50px] rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.8)] flex items-center justify-center">
-                      <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-[40px] h-[40px] sm:w-[45px] sm:h-[45px] md:w-[50px] md:h-[50px] rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.8)] flex items-center justify-center">
+                      <svg className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
@@ -372,72 +373,152 @@ export default function Home() {
         {/* Photo Upload */}
         {selectedClub && (
           <section className="mb-24 sm:mb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 sm:mb-16 text-center font-['Orbitron'] tracking-tight">
-              UPLOAD YOUR <span className="neon-pink">OUTFIT</span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+              ADD YOUR <span className="neon-pink">PHOTO</span>
             </h2>
 
             <div className="max-w-[1600px] mx-auto px-4">
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className={`
-                  relative club-card p-12 sm:p-16 lg:p-24 text-center cursor-pointer
-                  transition-all duration-300 rounded-[3rem]
-                  border-2 border-dashed w-full
-                  flex flex-col items-center justify-center min-h-[400px]
-                  ${uploadedImage
-                    ? 'border-cyan-500/50 bg-cyan-500/5'
-                    : 'border-white/20 hover:border-white/40 hover:bg-white/5'
-                  }
-                `}
-              >
-                {uploadedImage ? (
-                  <div className="relative w-full flex flex-col items-center">
-                    <div className="relative w-full max-w-2xl mx-auto rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
-                      <Image
-                        src={uploadedImage}
-                        alt="Your outfit"
-                        width={800}
-                        height={800}
-                        className="w-full h-auto object-contain max-h-[600px]"
-                      />
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setUploadedImage(null);
-                        setImageFile(null);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                      }}
-                      className="absolute -top-6 -right-6 bg-red-500 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center transition-all duration-200 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-110 hover:shadow-[0_0_30px_rgba(239,68,68,0.8)] z-10"
-                    >
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              {/* Image Preview */}
+              {uploadedImage && (
+                <div className="relative w-full flex flex-col items-center mb-12">
+                  <div className="relative w-full max-w-2xl mx-auto rounded-2xl overflow-hidden border-2 border-cyan-500/50 shadow-2xl">
+                    <Image
+                      src={uploadedImage}
+                      alt="Your outfit"
+                      width={800}
+                      height={800}
+                      className="w-full h-auto object-contain max-h-[600px]"
+                    />
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setUploadedImage(null);
+                      setImageFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                      if (cameraInputRef.current) cameraInputRef.current.value = '';
+                    }}
+                    className="absolute -top-6 -right-6 bg-red-500 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center transition-all duration-200 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-110 hover:shadow-[0_0_30px_rgba(239,68,68,0.8)] z-10"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
+              {/* Upload and Camera Buttons */}
+              {!uploadedImage && (
+                <div className="flex flex-wrap justify-center gap-6 sm:gap-8 max-w-[1600px] mx-auto px-4">
+                  {/* Upload from Files Button */}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                      group relative overflow-hidden
+                      rounded-[2rem] p-6 sm:p-8
+                      transition-all duration-300 ease-out
+                      transform
+                      w-[200px] sm:w-[220px]
+                      aspect-square
+                      flex flex-col items-center justify-start
+                      border-2
+                      bg-[#1a1a1a]
+                      border-white/10
+                      shadow-lg
+                      hover:border-white/20
+                      hover:scale-[1.02]
+                      hover:-translate-y-0.5
+                      active:border-cyan-500/50
+                      active:shadow-[0_0_40px_rgba(0,255,255,0.3)]
+                      active:scale-100
+                      active:translate-y-0
+                      p-6 sm:p-8
+                    `}
+                  >
+                    {/* File Icon */}
+                    <div className="mt-4 sm:mt-6 mb-4 sm:mb-6 h-16 sm:h-20 w-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]">
+                      <svg className="w-16 h-16 sm:w-20 sm:h-20 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-6 4h6m-6-8h3" />
                       </svg>
-                    </button>
+                    </div>
+
+                    {/* Button Text */}
+                    <h3 className="text-lg sm:text-xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white group-active:neon-cyan" style={{ color: 'white' }}>
+                      UPLOAD
+                    </h3>
+
+                    <div className="text-xs font-mono tracking-[0.2em] !text-gray-300 group-hover:!text-white transition-colors" style={{ color: '#d1d5db' }}>
+                      FROM DEVICE
+                    </div>
+                  </button>
+
+                  {/* OR Divider */}
+                  <div className="flex items-center justify-center px-8 py-6">
+                    <span className="text-2xl sm:text-3xl font-bold font-['Orbitron'] text-white/40 tracking-wider">OR</span>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="text-8xl sm:text-9xl mb-8 opacity-80">📸</div>
-                    <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 font-['Orbitron'] tracking-wide">
-                      CAPTURE OR UPLOAD
-                    </p>
-                    <p className="text-xl text-gray-400 font-mono tracking-widest">
-                      JPG, PNG, WEBP • MAX 10MB
-                    </p>
-                    <p className="text-base text-gray-500 mt-4 font-mono">
-                      📱 Mobile: Take photo directly from camera
-                    </p>
-                  </div>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
+
+                  {/* Camera Capture Button */}
+                  <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className={`
+                      group relative overflow-hidden
+                      rounded-[2rem] p-6 sm:p-8
+                      transition-all duration-300 ease-out
+                      transform
+                      w-[200px] sm:w-[220px]
+                      aspect-square
+                      flex flex-col items-center justify-start
+                      border-2
+                      bg-[#1a1a1a]
+                      border-white/10
+                      shadow-lg
+                      hover:border-white/20
+                      hover:scale-[1.02]
+                      hover:-translate-y-0.5
+                      active:border-cyan-500/50
+                      active:shadow-[0_0_40px_rgba(0,255,255,0.3)]
+                      active:scale-100
+                      active:translate-y-0
+                      p-6 sm:p-8
+                    `}
+                  >
+                    {/* Camera Icon */}
+                    <div className="mt-4 sm:mt-6 mb-4 sm:mb-6 h-16 sm:h-20 w-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-active:scale-95 group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]">
+                      <svg className="w-16 h-16 sm:w-20 sm:h-20 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+
+                    {/* Button Text */}
+                    <h3 className="text-lg sm:text-xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white group-active:neon-cyan" style={{ color: 'white' }}>
+                      CAMERA
+                    </h3>
+
+                    <div className="text-xs font-mono tracking-[0.2em] !text-gray-300 group-hover:!text-white transition-colors" style={{ color: '#d1d5db' }}>
+                      TAKE PHOTO
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Hidden file inputs */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
             </div>
           </section>
         )}
@@ -445,31 +526,32 @@ export default function Home() {
         {/* Submit Button */}
         {selectedClub && (
           <>
-            <br /><br />
-            <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-32 mt-24">
+            <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-16 sm:mb-24 lg:mb-32 pt-16 sm:pt-20 lg:pt-24 px-4">
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
                 className={`
-                group relative w-full max-w-[500px] py-24 sm:py-32
-                rounded-[3rem] text-3xl sm:text-4xl lg:text-5xl font-black
+                group relative w-full max-w-[500px] py-16 sm:py-20 md:py-24 lg:py-28 xl:py-32
+                rounded-[2rem] text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black
                 transition-all duration-200 font-['Orbitron'] tracking-wider
-                uppercase border-4
+                uppercase border-2
                 ${isSubmitting
                     ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
-                    : 'bg-white text-black border-white hover:bg-cyan-400 hover:border-cyan-400 hover:text-black hover:scale-105 hover:shadow-[0_0_60px_rgba(34,211,238,0.7)] active:scale-95 active:bg-cyan-300 active:shadow-[0_0_100px_rgba(34,211,238,1)]'
+                    : uploadedImage
+                      ? 'bg-[#1a1a1a] text-white border-cyan-500 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:bg-[#252525] hover:border-cyan-400 hover:text-cyan-400 hover:scale-105 hover:shadow-[0_0_80px_rgba(34,211,238,0.6)] active:scale-95 active:shadow-[0_0_100px_rgba(34,211,238,0.8)]'
+                      : 'bg-[#1a1a1a] text-gray-600 border-white/5 cursor-not-allowed hover:border-white/10'
                   }
               `}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-6">
-                    <span className="inline-block w-10 h-10 border-4 border-black/30 border-t-black rounded-full animate-spin" />
+                  <span className="flex items-center justify-center gap-3 sm:gap-4 md:gap-6">
+                    <span className="inline-block w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 border-2 sm:border-3 md:border-4 border-black/30 border-t-black rounded-full animate-spin" />
                     ANALYZING...
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center gap-6">
+                  <span className="flex items-center justify-center gap-3 sm:gap-4 md:gap-6">
                     FACE THE BOUNCER
-                    <span className="text-5xl">🚪</span>
+                    <span className="text-3xl sm:text-4xl md:text-5xl">🚪</span>
                   </span>
                 )}
               </button>
@@ -489,6 +571,12 @@ export default function Home() {
             </p>
             <div className="mt-4 text-xs text-gray-800 font-mono">
               BERLIN UNDERGROUND
+            </div>
+
+            <div className="mt-8">
+              <a href="/test-images" className="text-xs font-mono text-cyan-900/50 hover:text-cyan-600 transition-colors border-b border-transparent hover:border-cyan-600 pb-0.5">
+                Need some images to try? Click here
+              </a>
             </div>
           </div>
         </footer>
