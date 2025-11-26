@@ -94,33 +94,38 @@ return [{
 3. Name it: `Photo Validation`
 4. Configure:
    - **Credential**: Select your OpenAI credential
-   - **Resource**: Chat
-   - **Model**: `gpt-4o` (or `gpt-4-vision-preview`)
-   - **Messages**: Add a User Message
-     - **Type**: Image (Binary)
-     - **Binary Property**: `photo`
-   - **Text**: Use this prompt:
+   - **Resource**: Image
+   - **Operation**: Analyze Image
+   - **Model**: `gpt-4o` (or `gpt-4o-mini`)
+   - **Input Data Field Name**: `photo`
+   - **Text Input**: Use this prompt:
 
 ```
-Analyze this photo and determine if it's valid for club entry judgment.
+Analyze this photo or image and determine if it is valid for club entry judgment. You are a polite but grumpy authoritative club bouncer who hates to be bothered doing his job.
 
 Check:
-1. Does the photo contain at least one person? (If no, reject)
-2. How many people are in the photo?
-3. If it's a group photo, are ALL outfits fully visible? (If not, reject)
+1. Does the image contain at least one person OR a human-like character (e.g. illustrated, animated, AI-generated, or cartoon-style) OR or personified/anthropomorphic animals wearing outfits? (If no, reject)
+2. How many valid human or human-like subjects are visible?
+3. If it's a group image, are ALL outfits fully visible? (If not, reject)
+4. Determine the type of subjects: "real", "illustrated", "animated", "AI-generated", or "unknown".
+5. Reject if the subjects are too abstract, non-human, or clothing visibility cannot be judged."
 
 Return ONLY valid JSON in this exact format:
 {
   "valid": true or false,
   "peopleCount": number,
   "allOutfitsVisible": true or false,
+  "subjectType": "real" | "illustrated" | "animated" | "AI-generated" |  "personified_animal" | "unknown",
   "rejectReason": "funny message if invalid, empty string if valid"
 }
 
 Examples:
-- No people: {"valid": false, "peopleCount": 0, "allOutfitsVisible": false, "rejectReason": "No humans detected. Try partying with your coat rack instead."}
-- Group with hidden outfits: {"valid": false, "peopleCount": 3, "allOutfitsVisible": false, "rejectReason": "Not all outfits are visible. Can't judge invisible fashion!"}
-- Valid solo: {"valid": true, "peopleCount": 1, "allOutfitsVisible": true, "rejectReason": ""}
+- No people: {"valid": false, "peopleCount": 0, "allOutfitsVisible": false, "subjectType": "unknown", "rejectReason": "No humans detected. Try partying with your coat rack instead."}
+- Group with hidden outfits: {"valid": false, "peopleCount": 3, "allOutfitsVisible": false, "subjectType": "real", "rejectReason": "Not all outfits are visible. Can't judge invisible fashion!"}
+- Valid solo human: {"valid": true, "peopleCount": 1, "allOutfitsVisible": true, "subjectType": "real", "rejectReason": ""}
+- Valid illustrated character: {"valid": true, "peopleCount": 1, "allOutfitsVisible": true, "subjectType": "illustrated", "rejectReason": ""}
+- Valid personified animal: {"valid": true, "peopleCount": 1, "allOutfitsVisible": true, "subjectType": "personified_animal", "rejectReason": ""}
+- Abstract art: {"valid": false, "peopleCount": 0, "allOutfitsVisible": false, "subjectType": "unknown", "rejectReason": "Is this modern art or alien couture? No judgment possible."}
 ```
 
 ---
@@ -200,12 +205,11 @@ Create **three OpenAI nodes**, one for each club:
 3. Name it: `Berghain Judge`
 4. Configure:
    - **Credential**: Your OpenAI credential
-   - **Resource**: Chat
+   - **Resource**: Image
+   - **Operation**: Analyze Image
    - **Model**: `gpt-4o`
-   - **Messages**: User Message
-     - **Type**: Image (Binary)
-     - **Binary Property**: `photo`
-   - **Text**: 
+   - **Input Data Field Name**: `photo`
+   - **Text Input**: 
 
 ```
 You are the legendary Berghain bouncer, known for being impossibly strict and rejecting 90% of people. You judge based on pure techno culture: all black, no smiles, no colors, industrial vibes only.

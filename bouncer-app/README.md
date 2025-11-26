@@ -243,3 +243,18 @@ MIT License - See [../LICENSE](../LICENSE)
 ---
 
 **Need help?** Check the main [README](../README.md) or the deployment guides!
+
+
+Followup
+```
+Ok. I updated the post URL. But I now need a popup modal that can contain, an animation of eyes looking up and down when pending until the response, a error the request failed (I quit being a bouncer), when a successful response it shows icon (animated Check mark), a custom message based on the club name that is always the same, and when recected, a "Cancel" circle icon in red and a 2-3 sentence recection from the response. 
+
+the successful response will have the structure
+```
+json: {
+    verdict: judgment.verdict,
+    message: judgment.reasoning,
+    club: club
+  }
+```
+```

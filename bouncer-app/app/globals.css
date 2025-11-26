@@ -150,3 +150,47 @@ body {
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* --- Modal Animations --- */
+
+/* Scanning Eyes */
+@keyframes scan-eyes {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-10px); }
+  75% { transform: translateY(10px); }
+}
+
+.eye-pupil {
+  animation: scan-eyes 2s ease-in-out infinite;
+}
+
+/* Success Checkmark */
+@keyframes draw-check {
+  0% { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  100% { stroke-dasharray: 100; stroke-dashoffset: 0; }
+}
+
+.animate-check {
+  animation: draw-check 0.6s ease-out forwards;
+}
+
+/* Reject X */
+@keyframes draw-x {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-x {
+  animation: draw-x 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Modal Entrance */
+@keyframes modal-pop {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-content {
+  animation: modal-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

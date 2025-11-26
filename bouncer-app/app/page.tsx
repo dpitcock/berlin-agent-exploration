@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import VerdictModal from './components/VerdictModal';
 
 type Club = 'Berghain' | 'KitKat' | 'Sisyphus' | null;
 
@@ -92,7 +93,7 @@ export default function Home() {
       console.error('Error:', error);
       setVerdict({
         verdict: 'ERROR',
-        message: 'System malfunction. The bouncer stepped out for a smoke.',
+        message: 'I quit being a bouncer',
         club: selectedClub,
       });
     } finally {
@@ -146,262 +147,209 @@ export default function Home() {
           </div>
         </header>
 
-        {!verdict ? (
-          <>
-            {/* Club Selection */}
-            <section className="mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
-                SELECT YOUR <span className="neon-cyan">DESTINATION</span>
-              </h2>
+        {/* Club Selection */}
+        <section className="mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+            SELECT YOUR <span className="neon-cyan">DESTINATION</span>
+          </h2>
 
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 max-w-[1600px] mx-auto px-4">
-                {clubs.map((club) => (
-                  <button
-                    key={club.name}
-                    onClick={() => setSelectedClub(club.name)}
-                    className={`
-                      group relative overflow-hidden
-                      rounded-[2rem] p-6 sm:p-8 m-2
-                      transition-all duration-300 ease-out
-                      transform
-                      max-w-[500px] mx-auto w-full
-                      aspect-square
-                      flex flex-col items-center justify-center
-                      border-2
-                      bg-[#1a1a1a]
-                      ${selectedClub === club.name
-                        ? `
-                          border-white/30
-                          shadow-[0_0_50px_rgba(255,255,255,0.15)]
-                          scale-105 -translate-y-1
-                        `
-                        : `
-                          border-white/10
-                          shadow-lg
-                          hover:border-white/20
-                          hover:scale-[1.02]
-                          hover:-translate-y-0.5
-                          active:border-cyan-500/50
-                          active:shadow-[0_0_40px_rgba(0,255,255,0.3)]
-                          active:scale-100
-                          active:translate-y-0
-                        `
-                      }
-                      ${selectedClub && selectedClub !== club.name ? 'opacity-30 blur-[1px]' : ''}
-                    `}
-                  >
-                    {/* Logo */}
-                    <div className={`
-                      relative mb-6 sm:mb-8 h-20 sm:h-24 w-full flex items-center justify-center transition-all duration-300
-                      group-hover:scale-105 group-active:scale-95
-                      ${selectedClub === club.name ? 'neon-cyan drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]' : ''}
-                      group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]
-                    `}>
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-8 max-w-[1600px] mx-auto px-4">
+            {clubs.map((club) => (
+              <button
+                key={club.name}
+                onClick={() => setSelectedClub(club.name)}
+                className={`
+                  group relative overflow-hidden
+                  rounded-[2rem] p-6 sm:p-8 m-2
+                  transition-all duration-300 ease-out
+                  transform
+                  max-w-[500px] mx-auto w-full
+                  aspect-square
+                  flex flex-col items-center justify-center
+                  border-2
+                  bg-[#1a1a1a]
+                  ${selectedClub === club.name
+                    ? `
+                      border-white/30
+                      shadow-[0_0_50px_rgba(255,255,255,0.15)]
+                      scale-105 -translate-y-1
+                    `
+                    : `
+                      border-white/10
+                      shadow-lg
+                      hover:border-white/20
+                      hover:scale-[1.02]
+                      hover:-translate-y-0.5
+                      active:border-cyan-500/50
+                      active:shadow-[0_0_40px_rgba(0,255,255,0.3)]
+                      active:scale-100
+                      active:translate-y-0
+                    `
+                  }
+                  ${selectedClub && selectedClub !== club.name ? 'opacity-30 blur-[1px]' : ''}
+                `}
+              >
+                {/* Logo */}
+                <div className={`
+                  relative mb-6 sm:mb-8 h-20 sm:h-24 w-full flex items-center justify-center transition-all duration-300
+                  group-hover:scale-105 group-active:scale-95
+                  ${selectedClub === club.name ? 'neon-cyan drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]' : ''}
+                  group-active:neon-cyan group-active:drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]
+                `}>
+                  <Image
+                    src={club.logo}
+                    alt={`${club.name} logo`}
+                    width={200}
+                    height={100}
+                    className="w-auto h-full object-contain"
+                    priority
+                  />
+                </div>
+
+                {/* Club Name */}
+                <h3
+                  className={`
+                    text-2xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white
+                    ${selectedClub === club.name ? 'neon-cyan' : ''}
+                    group-active:neon-cyan
+                  `}
+                  style={{ color: 'white' }}
+                >
+                  {club.name}
+                </h3>
+
+                {/* Tagline */}
+                <div
+                  className="text-sm font-mono tracking-[0.2em] mb-4 !text-gray-300 group-hover:!text-white transition-colors"
+                  style={{ color: '#d1d5db' }}
+                >
+                  {club.tagline}
+                </div>
+
+                {/* Description */}
+                <p
+                  className="text-sm leading-relaxed max-w-[85%] text-center font-light !text-gray-400 group-hover:!text-gray-200 transition-colors"
+                  style={{ color: '#9ca3af' }}
+                >
+                  {club.description}
+                </p>
+
+                {/* Large Glowing Checkmark */}
+                {selectedClub === club.name && (
+                  <div className="absolute top-6 right-6 animate-in zoom-in-50 duration-300">
+                    <div className="w-[50px] h-[50px] rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.8)] flex items-center justify-center">
+                      <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Photo Upload */}
+        {selectedClub && (
+          <section className="mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+              UPLOAD YOUR <span className="neon-pink">OUTFIT</span>
+            </h2>
+
+            <div className="max-w-2xl mx-auto">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+                  relative club-card p-8 sm:p-12 lg:p-16 text-center cursor-pointer
+                  transition-all duration-300 rounded-2xl
+                  border-2 border-dashed
+                  ${uploadedImage
+                    ? 'border-cyan-500/50 bg-cyan-500/5'
+                    : 'border-white/20 hover:border-white/40 hover:bg-white/5'
+                  }
+                `}
+              >
+                {uploadedImage ? (
+                  <div className="relative">
+                    <div className="relative w-full max-w-md mx-auto rounded-xl overflow-hidden border-2 border-white/20">
                       <Image
-                        src={club.logo}
-                        alt={`${club.name} logo`}
-                        width={200}
-                        height={100}
-                        className="w-auto h-full object-contain"
-                        priority
+                        src={uploadedImage}
+                        alt="Your outfit"
+                        width={600}
+                        height={600}
+                        className="w-full h-auto object-contain max-h-[400px]"
                       />
                     </div>
-
-                    {/* Club Name */}
-                    <h3
-                      className={`
-                        text-2xl font-bold mb-2 font-['Orbitron'] tracking-widest uppercase !text-white
-                        ${selectedClub === club.name ? 'neon-cyan' : ''}
-                        group-active:neon-cyan
-                      `}
-                      style={{ color: 'white' }}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUploadedImage(null);
+                        setImageFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110"
                     >
-                      {club.name}
-                    </h3>
-
-                    {/* Tagline */}
-                    <div
-                      className="text-sm font-mono tracking-[0.2em] mb-4 !text-gray-300 group-hover:!text-white transition-colors"
-                      style={{ color: '#d1d5db' }}
-                    >
-                      {club.tagline}
-                    </div>
-
-                    {/* Description */}
-                    <p
-                      className="text-sm leading-relaxed max-w-[85%] text-center font-light !text-gray-400 group-hover:!text-gray-200 transition-colors"
-                      style={{ color: '#9ca3af' }}
-                    >
-                      {club.description}
-                    </p>
-
-                    {/* Large Glowing Checkmark */}
-                    {selectedClub === club.name && (
-                      <div className="absolute top-6 right-6 animate-in zoom-in-50 duration-300">
-                        <div className="w-[50px] h-[50px] rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.8)] flex items-center justify-center">
-                          <svg className="w-8 h-8 text-black" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* Photo Upload */}
-            {selectedClub && (
-              <section className="mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
-                  UPLOAD YOUR <span className="neon-pink">OUTFIT</span>
-                </h2>
-
-                <div className="max-w-2xl mx-auto">
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`
-                      relative club-card p-8 sm:p-12 lg:p-16 text-center cursor-pointer
-                      transition-all duration-300 rounded-2xl
-                      border-2 border-dashed
-                      ${uploadedImage
-                        ? 'border-cyan-500/50 bg-cyan-500/5'
-                        : 'border-white/20 hover:border-white/40 hover:bg-white/5'
-                      }
-                    `}
-                  >
-                    {uploadedImage ? (
-                      <div className="relative">
-                        <div className="relative w-full max-w-md mx-auto rounded-xl overflow-hidden border-2 border-white/20">
-                          <Image
-                            src={uploadedImage}
-                            alt="Your outfit"
-                            width={600}
-                            height={600}
-                            className="w-full h-auto object-contain max-h-[400px]"
-                          />
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setUploadedImage(null);
-                            setImageFile(null);
-                            if (fileInputRef.current) fileInputRef.current.value = '';
-                          }}
-                          className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110"
-                        >
-                          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6">📸</div>
-                        <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 font-['Orbitron']">
-                          CAPTURE OR UPLOAD
-                        </p>
-                        <p className="text-sm sm:text-base text-gray-500 font-mono">
-                          JPG, PNG, WEBP • MAX 10MB
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 font-mono">
-                          📱 Mobile: Take photo directly from camera
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
-                </div>
-              </section>
-            )}
-
-            {/* Submit Button */}
-            {selectedClub && uploadedImage && (
-              <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className={`
-                    group relative px-8 sm:px-12 lg:px-16 py-4 sm:py-5 lg:py-6 
-                    rounded-full text-base sm:text-lg lg:text-xl font-black
-                    transition-all duration-300 font-['Orbitron'] tracking-wide
-                    ${isSubmitting
-                      ? 'bg-gray-800 cursor-not-allowed opacity-50'
-                      : 'btn-chrome text-black hover:scale-105 glitch'
-                    }
-                  `}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-3">
-                      <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                      ANALYZING...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-3">
-                      FACE THE BOUNCER
-                      <span className="text-2xl">🚪</span>
-                    </span>
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          /* Verdict Display */
-          <section className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-700">
-            <div
-              className={`
-                relative rounded-3xl p-8 sm:p-12 lg:p-16 text-center overflow-hidden
-                ${verdict.verdict === 'ACCEPT'
-                  ? 'bg-gradient-to-br from-green-600 to-emerald-700 border-2 border-green-400/50'
-                  : verdict.verdict === 'REJECT'
-                    ? 'bg-gradient-to-br from-red-600 to-rose-700 border-2 border-red-400/50'
-                    : 'bg-gradient-to-br from-gray-700 to-gray-900 border-2 border-gray-500/50'
-                }
-              `}
-            >
-              {/* Animated background effect */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-              </div>
-
-              <div className="relative z-10">
-                <div className="text-7xl sm:text-8xl lg:text-9xl mb-6 sm:mb-8 animate-bounce">
-                  {verdict.verdict === 'ACCEPT' ? '✅' : verdict.verdict === 'REJECT' ? '❌' : '⚠️'}
-                </div>
-
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 sm:mb-6 font-['Orbitron'] tracking-tighter">
-                  {verdict.verdict === 'ACCEPT' ? 'WELCOME IN' : verdict.verdict === 'REJECT' ? 'REJECTED' : 'ERROR'}
-                </h2>
-
-                <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
-                  <p className="text-lg sm:text-xl lg:text-2xl font-light leading-relaxed text-balance">
-                    {verdict.message}
-                  </p>
-                </div>
-
-                <div className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black/30 rounded-full mb-6 sm:mb-8">
-                  <span className="text-xs sm:text-sm font-mono text-gray-300">
-                    CLUB: <span className="font-bold text-white">{verdict.club}</span>
-                  </span>
-                </div>
-
-                <button
-                  onClick={resetForm}
-                  className="btn-chrome text-black px-8 sm:px-10 lg:px-12 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 hover:scale-105 glitch font-['Orbitron']"
-                >
-                  TRY ANOTHER CLUB 🔄
-                </button>
+                ) : (
+                  <div>
+                    <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6">📸</div>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 font-['Orbitron']">
+                      CAPTURE OR UPLOAD
+                    </p>
+                    <p className="text-sm sm:text-base text-gray-500 font-mono">
+                      JPG, PNG, WEBP • MAX 10MB
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 font-mono">
+                      📱 Mobile: Take photo directly from camera
+                    </p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
             </div>
           </section>
+        )}
+
+        {/* Submit Button */}
+        {selectedClub && (
+          <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !uploadedImage}
+              className={`
+                group relative px-8 sm:px-12 lg:px-16 py-4 sm:py-5 lg:py-6 
+                rounded-full text-base sm:text-lg lg:text-xl font-black
+                transition-all duration-300 font-['Orbitron'] tracking-wide
+                ${isSubmitting || !uploadedImage
+                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
+                  : 'btn-chrome text-black hover:scale-105 glitch'
+                }
+              `}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-3">
+                  <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  ANALYZING...
+                </span>
+              ) : (
+                <span className="flex items-center gap-3">
+                  FACE THE BOUNCER
+                  <span className="text-2xl">🚪</span>
+                </span>
+              )}
+            </button>
+          </div>
         )}
 
         {/* Footer */}
@@ -420,6 +368,14 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {/* VERDICT MODAL */}
+      <VerdictModal
+        isOpen={isSubmitting || verdict !== null}
+        status={isSubmitting ? 'PENDING' : 'RESULT'}
+        verdict={verdict}
+        onClose={resetForm}
+      />
     </div>
   );
 }
