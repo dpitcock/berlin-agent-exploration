@@ -112,16 +112,19 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Industrial grid background */}
-      <div className="absolute inset-0 industrial-grid opacity-50" />
+    <div className="min-h-screen bg-black relative">
+      {/* Background Effects Container */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Industrial grid background */}
+        <div className="absolute inset-0 industrial-grid opacity-50" />
 
-      {/* Scanlines effect */}
-      <div className="absolute inset-0 scanlines pointer-events-none" />
+        {/* Scanlines effect */}
+        <div className="absolute inset-0 scanlines" />
 
-      {/* Disco ball ambient lights */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] disco-ball" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] disco-ball" style={{ animationDelay: '1.5s' }} />
+        {/* Disco ball ambient lights */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] disco-ball" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-[120px] disco-ball" style={{ animationDelay: '1.5s' }} />
+      </div>
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-7xl">
         {/* Header */}
@@ -251,18 +254,19 @@ export default function Home() {
 
         {/* Photo Upload */}
         {selectedClub && (
-          <section className="mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 sm:mb-8 text-center font-['Orbitron'] tracking-tight">
+          <section className="mb-24 sm:mb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 sm:mb-16 text-center font-['Orbitron'] tracking-tight">
               UPLOAD YOUR <span className="neon-pink">OUTFIT</span>
             </h2>
 
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-[1600px] mx-auto px-4">
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className={`
-                  relative club-card p-8 sm:p-12 lg:p-16 text-center cursor-pointer
-                  transition-all duration-300 rounded-2xl
-                  border-2 border-dashed
+                  relative club-card p-12 sm:p-16 lg:p-24 text-center cursor-pointer
+                  transition-all duration-300 rounded-[3rem]
+                  border-2 border-dashed w-full
+                  flex flex-col items-center justify-center min-h-[400px]
                   ${uploadedImage
                     ? 'border-cyan-500/50 bg-cyan-500/5'
                     : 'border-white/20 hover:border-white/40 hover:bg-white/5'
@@ -270,14 +274,14 @@ export default function Home() {
                 `}
               >
                 {uploadedImage ? (
-                  <div className="relative">
-                    <div className="relative w-full max-w-md mx-auto rounded-xl overflow-hidden border-2 border-white/20">
+                  <div className="relative w-full flex flex-col items-center">
+                    <div className="relative w-full max-w-2xl mx-auto rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
                       <Image
                         src={uploadedImage}
                         alt="Your outfit"
-                        width={600}
-                        height={600}
-                        className="w-full h-auto object-contain max-h-[400px]"
+                        width={800}
+                        height={800}
+                        className="w-full h-auto object-contain max-h-[600px]"
                       />
                     </div>
                     <button
@@ -287,23 +291,23 @@ export default function Home() {
                         setImageFile(null);
                         if (fileInputRef.current) fileInputRef.current.value = '';
                       }}
-                      className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110"
+                      className="absolute -top-6 -right-6 bg-red-500 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center transition-all duration-200 shadow-[0_0_20px_rgba(239,68,68,0.5)] hover:scale-110 hover:shadow-[0_0_30px_rgba(239,68,68,0.8)] z-10"
                     >
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 ) : (
-                  <div>
-                    <div className="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6">📸</div>
-                    <p className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3 font-['Orbitron']">
+                  <div className="flex flex-col items-center">
+                    <div className="text-8xl sm:text-9xl mb-8 opacity-80">📸</div>
+                    <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 font-['Orbitron'] tracking-wide">
                       CAPTURE OR UPLOAD
                     </p>
-                    <p className="text-sm sm:text-base text-gray-500 font-mono">
+                    <p className="text-xl text-gray-400 font-mono tracking-widest">
                       JPG, PNG, WEBP • MAX 10MB
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 font-mono">
+                    <p className="text-base text-gray-500 mt-4 font-mono">
                       📱 Mobile: Take photo directly from camera
                     </p>
                   </div>
@@ -323,33 +327,37 @@ export default function Home() {
 
         {/* Submit Button */}
         {selectedClub && (
-          <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !uploadedImage}
-              className={`
-                group relative px-8 sm:px-12 lg:px-16 py-4 sm:py-5 lg:py-6 
-                rounded-full text-base sm:text-lg lg:text-xl font-black
-                transition-all duration-300 font-['Orbitron'] tracking-wide
+          <>
+            <br /><br />
+            <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-32 mt-24">
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !uploadedImage}
+                className={`
+                group relative w-full max-w-[500px] py-24 sm:py-32
+                rounded-[3rem] text-3xl sm:text-4xl lg:text-5xl font-black
+                transition-all duration-200 font-['Orbitron'] tracking-wider
+                uppercase border-4
                 ${isSubmitting || !uploadedImage
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
-                  : 'btn-chrome text-black hover:scale-105 glitch'
-                }
+                    ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
+                    : 'bg-white text-black border-white hover:bg-cyan-400 hover:border-cyan-400 hover:text-black hover:scale-105 hover:shadow-[0_0_60px_rgba(34,211,238,0.7)] active:scale-95 active:bg-cyan-300 active:shadow-[0_0_100px_rgba(34,211,238,1)]'
+                  }
               `}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center gap-3">
-                  <span className="inline-block w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  ANALYZING...
-                </span>
-              ) : (
-                <span className="flex items-center gap-3">
-                  FACE THE BOUNCER
-                  <span className="text-2xl">🚪</span>
-                </span>
-              )}
-            </button>
-          </div>
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-6">
+                    <span className="inline-block w-10 h-10 border-4 border-black/30 border-t-black rounded-full animate-spin" />
+                    ANALYZING...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-6">
+                    FACE THE BOUNCER
+                    <span className="text-5xl">🚪</span>
+                  </span>
+                )}
+              </button>
+            </div>
+          </>
         )}
 
         {/* Footer */}

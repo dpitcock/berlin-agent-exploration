@@ -13,15 +13,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // --- MOCK MODE FOR TESTING ---
+    const useMocks = process.env.USE_MOCKS === 'true';
+    const mockedResponse = process.env.MOCKED_RESPONSE || 'reject'; // default to reject
+    const MOCK_DELAY = 3000; // 3 seconds to see the eyes animation
+
+    console.log('[DEBUG] Environment variables:', {
+      USE_MOCKS: process.env.USE_MOCKS,
+      useMocks,
+      MOCKED_RESPONSE: process.env.MOCKED_RESPONSE,
+      mockedResponse
+    });
+
+    if (useMocks) {
+      console.log(`[MOCK MODE] Simulating ${mockedResponse}...`);
+
+      await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY));
+
+      if (mockedResponse === 'failure' || mockedResponse === 'error') {
+        return NextResponse.json(
+          { verdict: 'ERROR', message: 'I quit being a bouncer', club },
+          { status: 500 }
+        );
+      }
+
+      const isAccept = mockedResponse === 'success-approve' || mockedResponse === 'accept';
+      const verdict = isAccept ? 'ACCEPT' : 'REJECT';
+
+      const mockResponse = {
+        verdict: verdict,
+        club: club,
+        message: isAccept
+          ? "Your vibe is impeccable. The darkness suits you. Enter."
+          : "Not enough black. Too much joy. Go home and rethink your life.",
+      };
+
+      return NextResponse.json(mockResponse);
+    }
+    // -----------------------------
+
     // Get n8n webhook URL from environment variable
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
 
     if (!n8nWebhookUrl) {
-      // If n8n is not configured, return a mock response for testing
-      console.warn('N8N_WEBHOOK_URL not configured, using mock response');
-      return getMockResponse(club);
+      return NextResponse.json(
+        { verdict: 'ERROR', message: 'System configuration error: N8N_WEBHOOK_URL missing', club },
+        { status: 500 }
+      );
     }
 
+    // Real n8n logic starts here
     // Convert photo to base64 for n8n
     const bytes = await photo.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -60,33 +101,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Mock response for testing without n8n
-function getMockResponse(club: string) {
-  const mockResponses = {
-    Berghain: {
-      verdict: 'REJECT',
-      message: "Did you think this was a carnival? That outfit screams 'I'm here for the Instagram photo.' Berghain is a temple of darkness, not a tourist attraction. Try Sisyphus.",
-      club: 'Berghain',
-    },
-    KitKat: {
-      verdict: 'ACCEPT',
-      message: "Now THAT'S what I'm talking about. Leather harness, confidence, and you clearly know what you're walking into. Welcome to the playground. Don't be shy.",
-      club: 'KitKat',
-    },
-    Sisyphus: {
-      verdict: 'ACCEPT',
-      message: 'YES! That neon outfit and those creative accessories scream Sisyphus energy. You clearly came to dance, express yourself, and have a good time. Welcome home, raver!',
-      club: 'Sisyphus',
-    },
-  };
-
-  return NextResponse.json(
-    mockResponses[club as keyof typeof mockResponses] || {
-      verdict: 'ERROR',
-      message: 'Unknown club selected.',
-      club,
-    }
-  );
 }
