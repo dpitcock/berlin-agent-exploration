@@ -10,6 +10,7 @@ interface Verdict {
   verdict: 'ACCEPT' | 'REJECT' | 'ERROR';
   message: string;
   club: string;
+  _mock?: boolean;
 }
 
 export default function Home() {
@@ -18,6 +19,8 @@ export default function Home() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [isMockMode, setIsMockMode] = useState(false);
+  const [mockFailure, setMockFailure] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const clubs = [
@@ -72,7 +75,7 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedClub || !imageFile) return;
+    if (!selectedClub) return;
 
     setIsSubmitting(true);
     setVerdict(null);
@@ -80,7 +83,13 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append('club', selectedClub);
-      formData.append('photo', imageFile);
+      if (imageFile) {
+        formData.append('photo', imageFile);
+      }
+      // Add mock failure flag if in mock mode
+      if (mockFailure) {
+        formData.append('mockFailure', 'true');
+      }
 
       const response = await fetch('/api/judge', {
         method: 'POST',
@@ -89,6 +98,9 @@ export default function Home() {
 
       const data = await response.json();
       setVerdict(data);
+      if (data._mock) {
+        setIsMockMode(true);
+      }
     } catch (error) {
       console.error('Error:', error);
       setVerdict({
@@ -149,6 +161,36 @@ export default function Home() {
             <span>POWERED BY n8n + OpenAI</span>
           </div>
         </header>
+
+        {/* Mock Mode Banner */}
+        {isMockMode && (
+          <div className="mb-8 mx-auto max-w-4xl">
+            <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-2xl p-6 text-center">
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <span className="text-3xl">⚠️</span>
+                <h3 className="text-xl font-bold text-yellow-400 font-['Orbitron']">DEMO MODE</h3>
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <p className="text-sm text-yellow-200/80 font-mono mb-4">
+                Not connected to n8n. Using randomized responses for testing.
+              </p>
+
+              {/* Simulate Failure Checkbox */}
+              <div className="flex items-center justify-center gap-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="mockFailure"
+                  checked={mockFailure}
+                  onChange={(e) => setMockFailure(e.target.checked)}
+                  className="w-5 h-5 rounded border-2 border-yellow-500/50 bg-yellow-900/50 checked:bg-red-600 cursor-pointer"
+                />
+                <label htmlFor="mockFailure" className="text-sm font-mono text-yellow-200 cursor-pointer select-none">
+                  🚬 Simulate Failure (Bouncer quits)
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Club Selection */}
         <section className="mb-12 sm:mb-16">
@@ -332,13 +374,13 @@ export default function Home() {
             <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-32 mt-24">
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || !uploadedImage}
+                disabled={isSubmitting}
                 className={`
                 group relative w-full max-w-[500px] py-24 sm:py-32
                 rounded-[3rem] text-3xl sm:text-4xl lg:text-5xl font-black
                 transition-all duration-200 font-['Orbitron'] tracking-wider
                 uppercase border-4
-                ${isSubmitting || !uploadedImage
+                ${isSubmitting
                     ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
                     : 'bg-white text-black border-white hover:bg-cyan-400 hover:border-cyan-400 hover:text-black hover:scale-105 hover:shadow-[0_0_60px_rgba(34,211,238,0.7)] active:scale-95 active:bg-cyan-300 active:shadow-[0_0_100px_rgba(34,211,238,1)]'
                   }
