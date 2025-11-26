@@ -13,7 +13,7 @@ Object.entries(envVars).forEach(([key, value]) => {
     const status = value ? '✅ SET' : '❌ NOT SET';
     console.log(`${status} - ${key}`);
     if (value) {
-        console.log(`   Value starts with: ${value.substring(0, 20)}...`);
+        console.log(`   Value starts with: ${value.substring(0, 4)}...`);
     }
 });
 

@@ -77,9 +77,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if we're in mock mode (no N8N_WEBHOOK_URL configured)
+    // Check if we're in mock mode
+    // Priority: USE_MOCKS env var, then fallback to checking if N8N_WEBHOOK_URL is missing
+    const useMocks = process.env.USE_MOCKS === 'true';
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    const isMockMode = !n8nWebhookUrl;
+    const isMockMode = useMocks || !n8nWebhookUrl;
 
     if (isMockMode) {
       console.log(`[MOCK MODE] Simulating judgment for ${club}...`);

@@ -1,28 +1,9 @@
-// Environment variable checker
-// This logs which env vars are loaded (keys only, not values for security)
-
+// Environment variable diagnostic utility
 export function logEnvKeys() {
-    console.log('\n🔍 Environment Variables Check:');
+    console.log('\n🔍 ENV CHECK - Server Side');
     console.log('================================');
-
-    // Check for our specific variables
-    const envVars = {
-        'N8N_WEBHOOK_URL': process.env.N8N_WEBHOOK_URL,
-    };
-
-    Object.entries(envVars).forEach(([key, value]) => {
-        const status = value ? '✅ SET' : '❌ NOT SET';
-        console.log(`${status} - ${key}`);
-    });
-
-    // Show all NEXT_PUBLIC_ variables (these are safe to show)
-    const publicVars = Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_'));
-    if (publicVars.length > 0) {
-        console.log('\n📢 Public Variables (NEXT_PUBLIC_*):');
-        publicVars.forEach(key => {
-            console.log(`  ✅ ${key}`);
-        });
-    }
-
+    console.log('N8N_WEBHOOK_URL:', process.env.N8N_WEBHOOK_URL ? '✅ SET' : '❌ NOT SET');
+    console.log('USE_MOCKS:', process.env.USE_MOCKS ? '✅ SET' : '❌ NOT SET');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
     console.log('================================\n');
 }

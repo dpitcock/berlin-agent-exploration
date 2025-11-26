@@ -87,12 +87,17 @@ export default function VerdictModal({ isOpen, status, verdict, onClose }: Verdi
                         {/* --- PENDING STATE --- */}
                         {status === 'PENDING' && (
                             <div className="animate-in fade-in zoom-in duration-300">
-                                <div className="mb-20 relative flex justify-center">
-                                    {/* Judging Eyes GIF */}
+                                <div className="mb-20 relative flex justify-center gap-16">
+                                    {/* Judging Eyes SVG - Two eyes */}
                                     <img
-                                        src="/judging-eyes.gif"
-                                        alt="Judging eyes scanning"
-                                        className="w-[600px] h-auto rounded-3xl shadow-[0_0_80px_rgba(0,255,255,0.6)]"
+                                        src="/judging-eyes.svg"
+                                        alt="Judging eye scanning"
+                                        className="w-64 h-64"
+                                    />
+                                    <img
+                                        src="/judging-eyes.svg"
+                                        alt="Judging eye scanning"
+                                        className="w-64 h-64"
                                     />
                                 </div>
 
