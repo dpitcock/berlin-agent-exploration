@@ -8,7 +8,9 @@ The workflow receives data from your Vercel web app and uses OpenAI Vision to ju
 
 **Flow:**
 ```
-Webhook Trigger → Photo Validation → Club Router → Club-Specific Judge → Return Verdict
+Webhook Trigger → Photo Validation → Check Validation → If Valid? 
+                                                      ├─(No)→ Early Reject Response
+                                                      └─(Yes)→ Club Router → Club-Specific Judge → Return Verdict
 ```
 
 ---
@@ -204,20 +206,54 @@ if (club === 'Berghain' && validation.peopleCount > 2) {
 // Photo is valid, continue to club-specific judge
 return [{
   json: {
-    club: club,
     peopleCount: validation.peopleCount,
     subjectType: validation.subjectType,
-    photoValid: true,
-    ...imageData
+    photoValid: true
+  },
+  binary: {
+    photo: imageData
   }
 }];
 ```
 
 ---
 
-## Step 7: Add Switch Node (Route by Club)
+## Step 7: Add If Node (Early Reject Check)
 
 1. Click **+** after Check Validation
+2. Add **If** node
+3. Name it: `If Valid`
+4. Configure Condition:
+   - **Value 1**: `{{ $json.verdict }}`
+   - **Operation**: String -> Equal
+   - **Value 2**: `REJECT`
+
+   *Logic: If the verdict is REJECT, we exit early. If not, we continue to the club judges.*
+
+## Step 8: Add Early Exit Formatter
+
+1. From the **True** output of the If node (Verdict == REJECT), click **+**
+2. Add **Code** node
+3. Name it: `Format Response (Reject)`
+4. Add code:
+   ```javascript
+   const verdict = $input.item.json.verdict;
+   const message = $input.item.json.message;
+   // Always get club from the source
+   const club = $('Parse Input').first().json.club;
+   
+   return [{
+     json: {
+       verdict,
+       message,
+       club
+     }
+   }];
+   ```
+
+## Step 9: Add Switch Node (Route by Club)
+
+1. Connect the **False** output of the `If Valid` node to this new node
 2. Add **Switch** node
 3. Configure:
    - **Mode**: Rules
@@ -229,11 +265,11 @@ return [{
 
 ---
 
-## Step 8: Add Club-Specific Judge Nodes
+## Step 10: Add Club-Specific Judge Nodes
 
 Create **three OpenAI nodes**, one for each club:
 
-### 8a. Berghain Judge
+### 10a. Berghain Judge
 
 1. From Switch output 0, click **+**
 2. Add **OpenAI** node
@@ -276,7 +312,7 @@ Respond in JSON format:
 Remember: You reject 90% of people. Be extremely picky. Make it hurt.
 ```
 
-### 8b. KitKat Judge
+### 10b. KitKat Judge
 
 1. From Switch output 1, click **+**
 2. Add **OpenAI** node
@@ -314,7 +350,7 @@ Respond in JSON format:
 Be selective but fair. Reward creativity and confidence. Remember you have a German accent so let the response be in some German-English hybrid language understandable to all.
 ```
 
-### 8c. Sisyphus Judge
+### 10c. Sisyphus Judge
 
 1. From Switch output 2, click **+**
 2. Add **OpenAI** node
@@ -354,7 +390,7 @@ Be welcoming to creativity, but don't let in the uninspired. You reject about 75
 
 ---
 
-## Step 9: Add Merge Node
+## Step 11: Add Merge Node
 
 1. Click **+** after any judge node
 2. Add **Merge** node
@@ -364,7 +400,7 @@ Be welcoming to creativity, but don't let in the uninspired. You reject about 75
 
 ---
 
-## Step 10: Add Format Response Node
+## Step 12: Add Final Response Formatter
 
 1. Click **+** after Merge
 2. Add **Code** node
@@ -389,9 +425,6 @@ if (jsonStart === -1 || jsonEnd === -1) {
 
 const jsonString = aiResponse.substring(jsonStart, jsonEnd + 1).trim();
 const judgment = JSON.parse(jsonString);
-
-// Get club name from Check Validation node
-const club = $('Check Validation').first().json.club;
 
 // Format the response to send back to the web app
 return [{

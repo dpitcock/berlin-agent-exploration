@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        256,
+        304,
         608
       ],
       "id": "74dcd590-37fb-4db1-8e93-f2a6eb534c47",
@@ -50,8 +50,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        704,
-        608
+        656,
+        752
       ],
       "id": "41bb39dc-95ab-449a-b704-8cf9978a4ce5",
       "name": "Photo Validation",
@@ -64,12 +64,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get club from previous node\nconst club = $('Parse Input').first().json.club;\nconst binaryData = $('Parse Input').first().binary;\n\n// Parse AI validation response\nconst aiResponseRaw = $input.first().json.output[0].content[0].text;\nconst jsonStart = aiResponseRaw.indexOf('{');\nconst jsonEnd = aiResponseRaw.lastIndexOf('}');\n\nif (jsonStart === -1 || jsonEnd === -1) {\n  throw new Error('JSON braces not found in AI response');\n}\n\nconst jsonString = aiResponseRaw.substring(jsonStart, jsonEnd + 1).trim();\nconst validation = JSON.parse(jsonString);\n\n// Check if photo is invalid\nif (!validation.valid) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: validation.rejectReason,\n      club: club\n    }\n  }];\n}\n\n// Berghain special rule: reject groups of 3+\nif (club === 'Berghain' && validation.peopleCount > 2) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: \"Berghain doesn't do groups of 3+. This isn't a tourist bus. Come back with one friend max, or solo.\",\n      club: club\n    }\n  }];\n}\n\n// Photo is valid, continue to club-specific judge\nreturn [{\n  json: {\n    club: club,\n    peopleCount: validation.peopleCount,\n    subjectType: validation.subjectType,\n    photoValid: true\n  },\n  binary: binaryData\n}];"
+        "jsCode": "// Get club from previous node\nconst club = $('Parse Input').first().json.club;\nconst binaryData = $('Parse Input').first().binary;\n\n// Parse AI validation response\nconst aiResponseRaw = $input.first().json.output[0].content[0].text;\nconst jsonStart = aiResponseRaw.indexOf('{');\nconst jsonEnd = aiResponseRaw.lastIndexOf('}');\n\nif (jsonStart === -1 || jsonEnd === -1) {\n  throw new Error('JSON braces not found in AI response');\n}\n\nconst jsonString = aiResponseRaw.substring(jsonStart, jsonEnd + 1).trim();\nconst validation = JSON.parse(jsonString);\n\n// Check if photo is invalid\nif (!validation.valid) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: validation.rejectReason,\n    }\n  }];\n}\n\n// Berghain special rule: reject groups of 3+\nif (club === 'Berghain' && validation.peopleCount > 2) {\n  return [{\n    json: {\n      verdict: \"REJECT\",\n      message: \"Berghain doesn't do groups of 3+. This isn't a tourist bus. Come back with one friend max, or solo.\",\n    }\n  }];\n}\n\n// Photo is valid, continue to club-specific judge\nreturn [{\n  json: {\n    peopleCount: validation.peopleCount,\n    subjectType: validation.subjectType,\n    photoValid: true\n  },\n  binary: binaryData\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        928,
+        800,
         608
       ],
       "id": "d5c3d43f-dd9f-49f1-89d0-58a8e04300d8",
@@ -90,7 +90,7 @@
                 "conditions": [
                   {
                     "id": "27e87a8d-dd6e-4c3f-90c9-03abe83649e7",
-                    "leftValue": "=`{{ $json.club }}`",
+                    "leftValue": "={{ $('Parse Input').item.json.club }}",
                     "rightValue": "`Berghain`",
                     "operator": {
                       "type": "string",
@@ -113,7 +113,7 @@
                 "conditions": [
                   {
                     "id": "f7598321-5836-48d1-961c-2478a5076fde",
-                    "leftValue": "=`{{ $json.club }}`",
+                    "leftValue": "={{ $('Parse Input').item.json.club }}",
                     "rightValue": "`KitKat`",
                     "operator": {
                       "type": "string",
@@ -136,7 +136,7 @@
                 "conditions": [
                   {
                     "id": "9558373c-958b-4b44-b2ad-29d23f7ec02c",
-                    "leftValue": "=`{{ $json.club }}`",
+                    "leftValue": "={{ $('Parse Input').item.json.club }}",
                     "rightValue": "`Sisyphus`",
                     "operator": {
                       "type": "string",
@@ -155,8 +155,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        1152,
-        592
+        1088,
+        576
       ],
       "id": "0e57f2fc-2505-459c-89cf-9f86b64eeb84",
       "name": "Switch"
@@ -180,8 +180,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        1376,
-        416
+        1392,
+        640
       ],
       "id": "8563dbbd-7c51-4369-9b13-f10631befe7e",
       "name": "Berghain Bouncer",
@@ -211,8 +211,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        1376,
-        608
+        1392,
+        816
       ],
       "id": "78e97841-2964-41e2-9d2c-af4a7ef5220c",
       "name": "KitKat Bouncer",
@@ -242,8 +242,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        1376,
-        800
+        1392,
+        992
       ],
       "id": "59aa5df8-fb70-47ac-9187-8f6af6c61fd6",
       "name": "Sisyphus Bouncer",
@@ -261,8 +261,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1600,
-        592
+        1616,
+        736
       ],
       "id": "43179475-cfb0-4e89-8fa3-566193987f4e",
       "name": "Merge",
@@ -275,11 +275,60 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1824,
-        608
+        1792,
+        752
       ],
       "id": "f50b9f0f-d257-4cfa-bc7c-cf8fa4d9ca58",
       "name": "Format Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Get club name from Check Validation node\nconst club = $('Parse Input').first().json.club;\nconst verdict = $('Check Validation').first().json.verdict;\nconst message = $('Check Validation').first().json.message;\n\n// Format the response to send back to the web app\nreturn [{\n  json: {\n    club,\n    verdict,\n    message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        576
+      ],
+      "id": "d27ad3f3-b1da-4093-ab65-7623699429e6",
+      "name": "Format Response1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "73e1c90c-704a-45da-9790-a679cf51a72d",
+              "leftValue": "={{ $('Check Validation').item.json.verdict }}",
+              "rightValue": "REJECT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        944,
+        480
+      ],
+      "id": "baa7f352-1b5d-466a-8c2e-b0d35711c2ea",
+      "name": "If Valid"
     }
   ],
   "pinData": {},
@@ -321,7 +370,7 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "If Valid",
             "type": "main",
             "index": 0
           }
@@ -396,13 +445,31 @@
           }
         ]
       ]
+    },
+    "If Valid": {
+      "main": [
+        [
+          {
+            "node": "Format Response1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "118514c6-7129-4295-baec-e88c9b8baa8a",
+  "versionId": "86019401-ee72-4d8c-aa42-b35170e861f7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "2a692c226ff7ba86dd8d5b11115fba7d0f06be995033cb5c5d1f2729b7ff73ba"

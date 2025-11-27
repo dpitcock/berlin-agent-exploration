@@ -34,28 +34,44 @@ Use this checklist to track your progress building the Berlin Club Bouncer agent
   - [ ] Add environment variable (placeholder for now)
   - [ ] Deploy and get your URL
 
-## Phase 3: Build n8n Workflow (60-90 minutes)
+## Phase 3: Choose Your Brain 🧠
+ 
+ ### Option A: n8n Workflow (Contest Mode)
+ *Recommended for the Agent Roast Show submission*
+ 
+ - [ ] Create new workflow in n8n
+ - [ ] Add Webhook Trigger node (not Typeform!)
+ - [ ] Add Code node (Parse Input)
+ - [ ] Add OpenAI credentials to n8n
+ - [ ] Add OpenAI node (Photo Validation)
+ - [ ] Add Code node (Check Validation)
+ - [ ] Add Switch node (Route by Club)
+ - [ ] Add Berghain Judge node (OpenAI)
+ - [ ] Add KitKat Judge node (OpenAI)
+ - [ ] Add Sisyphus Judge node (OpenAI)
+ - [ ] Add Merge node
+ - [ ] Add Code node (Format Response)
+ - [ ] Copy Webhook URL
+ - [ ] Activate workflow
+ 
+ ### Option B: OpenAI Direct (Fast Mode)
+ *Recommended for quick deployment and testing*
+ 
+ - [ ] Get OpenAI API Key
+ - [ ] That's it! No workflow needed.
 
-- [ ] Create new workflow in n8n
-- [ ] Add Webhook Trigger node (not Typeform!)
-- [ ] Add Code node (Parse Input)
-- [ ] Add OpenAI credentials to n8n
-- [ ] Add OpenAI node (Photo Validation)
-- [ ] Add Code node (Check Validation)
-- [ ] Add Switch node (Route by Club)
-- [ ] Add Berghain Judge node (OpenAI)
-- [ ] Add KitKat Judge node (OpenAI)
-- [ ] Add Sisyphus Judge node (OpenAI)
-- [ ] Add Merge node
-- [ ] Add Code node (Format Response)
-- [ ] Copy Webhook URL
-- [ ] Activate workflow
 
 ## Phase 4: Connect & Test (30 minutes)
 
-- [ ] Add N8N_WEBHOOK_URL to Vercel
-  - [ ] Copy webhook URL from n8n
-  - [ ] Add to Vercel environment variables
+## Phase 4: Connect & Test (30 minutes)
+
+- [ ] Configure Environment Variables in Vercel
+  - [ ] **For Option A (n8n):**
+    - `NEXT_PUBLIC_WORKFLOW` = `n8n`
+    - `N8N_WEBHOOK_URL` = [Your Webhook URL]
+  - [ ] **For Option B (OpenAI):**
+    - `NEXT_PUBLIC_WORKFLOW` = `openai`
+    - `OPENAI_API_KEY` = [Your OpenAI Key]
   - [ ] Redeploy if needed
   
 - [ ] Test with solo photo (all black) → Berghain

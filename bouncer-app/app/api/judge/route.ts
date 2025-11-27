@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 import { logEnvKeys } from '@/app/env-check';
 
 // Log environment variables on first load
@@ -7,6 +8,11 @@ if (!hasLoggedEnv) {
   logEnvKeys();
   hasLoggedEnv = true;
 }
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Mock responses for each club
 const MOCK_RESPONSES = {
@@ -70,7 +76,19 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const club = formData.get('club') as string;
     const photo = formData.get('photo') as File | null;
+    const code = formData.get('code') as string | null;
     const mockFailure = formData.get('mockFailure') === 'true';
+
+    // Verify Guestlist Code
+    const validCode = process.env.GUESTLIST_CODE;
+    if (validCode) {
+      if (!code || code.toUpperCase() !== validCode.toUpperCase()) {
+        return NextResponse.json(
+          { verdict: 'ERROR', message: 'Access Denied: Invalid Guestlist Code', club: club || 'Unknown' },
+          { status: 401 }
+        );
+      }
+    }
 
     if (!club) {
       return NextResponse.json(
@@ -79,16 +97,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if we're in mock mode
-    // Priority: USE_MOCKS env var, then fallback to checking if N8N_WEBHOOK_URL is missing
-    const useMocks = process.env.USE_MOCKS === 'true';
+    // Determine workflow mode
+    // Options: 'n8n', 'openai'. Anything else defaults to MOCK mode.
+    const workflowMode = process.env.NEXT_PUBLIC_WORKFLOW;
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    const isMockMode = useMocks || !n8nWebhookUrl;
+    const isMockMode = workflowMode !== 'n8n' && workflowMode !== 'openai';
 
     if (isMockMode) {
-      console.log(`[MOCK MODE] Simulating judgment for ${club}...`);
+      console.log(`[MOCK MODE] Simulating judgment for ${club}... (WORKFLOW=${workflowMode || 'undefined'})`);
 
-      // Check if user wants to simulate a failure
       if (mockFailure) {
         console.log('[MOCK MODE] Simulating failure response...');
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -100,16 +117,11 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // In mock mode, we don't require a photo
-      // Simulate network delay (2-4 seconds)
       const delay = 2000 + Math.random() * 2000;
       await new Promise((resolve) => setTimeout(resolve, delay));
 
-      // Randomly decide accept/reject (30% accept, 70% reject to match Berghain vibes)
       const isAccept = Math.random() < 0.3;
       const verdict = isAccept ? 'ACCEPT' : 'REJECT';
-
-      // Get random message for this club
       const clubResponses = MOCK_RESPONSES[club as keyof typeof MOCK_RESPONSES];
       const messages = isAccept ? clubResponses.accept : clubResponses.reject;
       const message = messages[Math.floor(Math.random() * messages.length)];
@@ -118,7 +130,7 @@ export async function POST(request: NextRequest) {
         verdict,
         message,
         club,
-        _mock: true, // Flag to indicate this is a mock response
+        _mock: true,
       });
     }
 
@@ -130,55 +142,143 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Real n8n logic starts here
-    // Convert photo to base64 for n8n
     const bytes = await photo.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Image = buffer.toString('base64');
 
-    // Send to n8n webhook with 60s timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    if (workflowMode === 'n8n') {
+      if (!n8nWebhookUrl) {
+        throw new Error('WORKFLOW is set to n8n but N8N_WEBHOOK_URL is missing');
+      }
 
-    try {
-      const n8nResponse = await fetch(n8nWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          club,
-          image: {
-            data: base64Image,
-            mimeType: photo.type,
-            filename: photo.name,
+      console.log(`[N8N MODE] Sending to webhook: ${n8nWebhookUrl}`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      try {
+        const n8nResponse = await fetch(n8nWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            club,
+            image: {
+              data: base64Image,
+              mimeType: photo.type,
+              filename: photo.name,
+            },
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!n8nResponse.ok) {
+          const errorText = await n8nResponse.text();
+          throw new Error(`n8n webhook failed: ${n8nResponse.status} ${n8nResponse.statusText}`);
+        }
+
+        const verdict = await n8nResponse.json();
+        return NextResponse.json(verdict);
+      } catch (fetchError: unknown) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('n8n webhook timed out after 60 seconds');
+        }
+        throw fetchError;
+      }
+    } else {
+      // OPENAI DIRECT MODE
+      console.log(`[OPENAI MODE] Analyzing with gpt-4o-mini for ${club}...`);
+
+      const systemPrompt = `
+You are an AI Bouncer for Berlin's most exclusive clubs.
+Your goal is to validate a photo and then judge it based on the specific club's strict criteria.
+
+INPUT CONTEXT:
+- Club: ${club}
+
+STEP 1: VALIDATION
+First, analyze the image to ensure it is valid for judgment. Assume this universe allows humans, illustrated or animated characters, AI-generated personas, and personified/anthropomorphic animals to exist alongside each other, party, and converse at your club.
+
+- Must contain at least one person/character (human, animated, or anthropomorphic).
+- If a group, all outfits must be visible.
+- If outfits are too much clothes, stop and return JSON: { "verdict": "REJECT", "message": "Reason..." } (Use "REJECT" for invalid photos with a funny reason as to they need to show their clubbing outfit)
+- If INVALID, stop and return JSON: { "verdict": "REJECT", "message": "Reason..." } (Use "REJECT" for invalid photos with a funny reason)
+
+STEP 2: JUDGMENT
+If valid, adopt the persona of the ${club} bouncer and judge the outfit.
+
+CLUB PERSONAS:
+
+1. BERGHAIN (The Strict Industrialist)
+- Vibe: You are the legendary Berghain bouncer, known for being impossibly strict. You judge based on pure techno culture: all black, no smiles, no colors, industrial vibes only
+- Rules: No bright colors, no smiles, no casual/tourist wear, no groups larger than 3 people.
+- Accept: All black, goth, industrial, leather, more skin than usual, stoic, look like you've been on a 3 day bender and just want to dance to techno.
+- Voice: Jaded, brutal, German-English hybrid.
+- Rejection-rate: 90%
+
+2. KITKAT (The Kinky Hedonist)
+- Vibe: Sex-positive, provocative, edgy. You judge to ensure the club is a safe-space for all.
+- Rules: No boring/conservative clothes. Must show skin/fetish wear.
+- Accept: Latex, bondage-inspired, leather, harnesses, mesh, overwhelming amount of skin showing, bold confidence, provocative, boundary-pushing fashion
+- Voice: Flirty, edgy, German-English hybrid.
+- Rejection-rate: 80%
+
+3. SISYPHUS (The Hippie Raver)
+- Vibe: Colorful, creative, welcoming (to artists).
+- Rules: No corporate/boring clothes.
+- Accept: Creativity, Neon, DIY, glitter, smiles, preference for skin, lots of accessories, face stickers, piercings, tatoos, festival vibes.
+- Voice: Friendly but honest, "Not today", German-English hybrid.
+- Rejection-rate: 70%
+
+STEP 3: OUTPUT
+Return ONLY JSON:
+{
+  "verdict": "ACCEPT" | "REJECT",
+  "message": "Your witty/harsh reason here"
+}
+`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Here is the photo of the guest trying to enter." },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${photo.type};base64,${base64Image}`,
+                  detail: "low" // Use low detail for speed/cost, usually sufficient for outfit check
+                },
+              },
+            ],
           },
-        }),
-        signal: controller.signal,
+        ],
+        max_tokens: 300,
+        response_format: { type: "json_object" },
       });
-      clearTimeout(timeoutId);
 
-      if (!n8nResponse.ok) {
-        const errorText = await n8nResponse.text();
-        console.error(`n8n webhook failed (${n8nResponse.status}): ${errorText}`);
-        throw new Error(`n8n webhook failed: ${n8nResponse.status} ${n8nResponse.statusText}`);
-      }
+      const content = response.choices[0].message.content;
+      if (!content) throw new Error("No content from OpenAI");
 
-      const verdict = await n8nResponse.json();
-      return NextResponse.json(verdict);
-    } catch (fetchError: unknown) {
-      clearTimeout(timeoutId);
-      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        throw new Error('n8n webhook timed out after 60 seconds');
-      }
-      throw fetchError;
+      const result = JSON.parse(content);
+
+      return NextResponse.json({
+        verdict: result.verdict,
+        message: result.message,
+        club: club
+      });
     }
+
   } catch (error) {
     console.error('Error processing request:', error);
     return NextResponse.json(
       {
         verdict: 'ERROR',
-        message: 'I quit being a bouncer',
+        message: 'I quit being a bouncer (System Error)',
         club: 'Unknown',
       },
       { status: 500 }

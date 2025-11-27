@@ -26,40 +26,37 @@ The AI agent:
 
 ## 🏗️ Architecture
 
-This project uses a **modern hybrid approach** that showcases both UI/UX skills and n8n workflow automation:
+This project supports **Dual Mode Operation**, allowing you to switch between a complex n8n workflow (for the contest) and a direct OpenAI integration (for simplicity/performance).
+
+### Mode A: n8n Workflow (Contest Mode)
+*Best for: Visualizing logic, complex flows, contest submission*
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    USER EXPERIENCE                          │
-│                                                             │
-│  Premium Next.js Web App (Vercel)                          │
-│  • Stunning Berlin club aesthetic                          │
-│  • Photo upload with preview                               │
-│  • Real-time verdict display                               │
-└─────────────────┬───────────────────────────────────────────┘
-                  │
-                  │ Webhook
-                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    AI BRAIN (n8n)                           │
-│                                                             │
-│  n8n Workflow                                              │
-│  1. Photo Validation (OpenAI Vision)                       │
-│  2. Group Size Check                                       │
-│  3. Club Router (Switch)                                   │
-│  4. Club-Specific AI Judges                                │
-│     • Berghain: Harsh techno minimalist                    │
-│     • KitKat: Provocative fetish expert                    │
-│     • Sisyphus: Creative rave enthusiast                   │
-│  5. Return Verdict                                         │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────┐       Webhook       ┌─────────────────────────┐
+│  Next.js Web App      │ ──────────────────► │  n8n Workflow           │
+│  (Vercel)             │                     │  • Validation           │
+│                       │ ◄────────────────── │  • Club Routing         │
+│                       │       JSON          │  • 3x AI Judges         │
+└───────────────────────┘                     └─────────────────────────┘
 ```
 
-**Why this approach?**
-- ✅ **Better than Typeform** - Custom UI showcases your agency's design skills
-- ✅ **Still uses n8n** - All AI logic runs in n8n (perfect for the contest)
-- ✅ **More impressive** - Shows full-stack capabilities
-- ✅ **Better UX** - Seamless experience for users
+### Mode B: Direct OpenAI (Performance Mode)
+*Best for: Speed, lower latency, simpler stack*
+
+```
+┌───────────────────────┐       API Call      ┌─────────────────────────┐
+│  Next.js Web App      │ ──────────────────► │  OpenAI API (GPT-4o)    │
+│  (Vercel)             │                     │  • "Mega Prompt"        │
+│                       │ ◄────────────────── │  • Combined Logic       │
+│                       │       JSON          │                         │
+└───────────────────────┘                     └─────────────────────────┘
+```
+
+**Configuration:**
+Switch modes instantly using the `NEXT_PUBLIC_WORKFLOW` environment variable:
+- `n8n`: Uses the webhook workflow
+- `openai`: Uses the direct API integration
+
 
 ---
 

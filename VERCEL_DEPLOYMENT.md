@@ -51,9 +51,12 @@ git push -u origin main
 
 5. **Add Environment Variables**:
    - Click **Environment Variables**
-   - Add variable:
-     - **Name**: `N8N_WEBHOOK_URL`
-     - **Value**: Your n8n webhook URL (e.g., `https://yourname.app.n8n.cloud/webhook/berlin-bouncer`)
+   - **For n8n Mode**:
+     - `NEXT_PUBLIC_WORKFLOW` = `n8n`
+     - `N8N_WEBHOOK_URL` = Your n8n webhook URL
+   - **For OpenAI Mode**:
+     - `NEXT_PUBLIC_WORKFLOW` = `openai`
+     - `OPENAI_API_KEY` = Your OpenAI API Key
    - Click **Add**
 
 6. Click **Deploy**
@@ -86,11 +89,16 @@ vercel
    - In which directory is your code located? `./`
    - Want to override settings? **N**
 
-5. **Add environment variable**:
+5. **Add environment variables**:
 ```bash
-vercel env add N8N_WEBHOOK_URL
+# For OpenAI Mode
+vercel env add NEXT_PUBLIC_WORKFLOW openai
+vercel env add OPENAI_API_KEY sk-...
+
+# OR for n8n Mode
+vercel env add NEXT_PUBLIC_WORKFLOW n8n
+vercel env add N8N_WEBHOOK_URL https://...
 ```
-   - Paste your n8n webhook URL
    - Select all environments (Production, Preview, Development)
 
 6. **Deploy to production**:
@@ -124,7 +132,9 @@ vercel --prod
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `N8N_WEBHOOK_URL` | Your n8n workflow webhook URL | `https://yourname.app.n8n.cloud/webhook/berlin-bouncer` |
+| `NEXT_PUBLIC_WORKFLOW` | Mode selection: `n8n` or `openai` | `openai` |
+| `OPENAI_API_KEY` | Required if mode is `openai` | `sk-...` |
+| `N8N_WEBHOOK_URL` | Required if mode is `n8n` | `https://yourname.app.n8n.cloud/webhook/...` |
 
 ---
 

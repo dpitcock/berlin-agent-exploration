@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import VerdictModal from './components/VerdictModal';
+import GuestlistGatekeeper from './components/GuestlistGatekeeper';
 
 type Club = 'Berghain' | 'KitKat' | 'Sisyphus' | null;
 
@@ -21,8 +22,84 @@ export default function Home() {
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [isMockMode, setIsMockMode] = useState(false);
   const [mockFailure, setMockFailure] = useState(false);
+
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [guestlistCode, setGuestlistCode] = useState('');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlCode = params.get('code');
+      const storedCode = localStorage.getItem('guestlist_code');
+      const codeToTest = urlCode || storedCode;
+
+      if (codeToTest) {
+        try {
+          const res = await fetch('/api/verify-guestlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: codeToTest })
+          });
+
+          if (res.ok) {
+            setIsAuthenticated(true);
+            setGuestlistCode(codeToTest);
+            localStorage.setItem('guestlist_code', codeToTest);
+            // Ensure URL has code
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('code', codeToTest);
+            window.history.replaceState({}, '', newUrl.toString());
+          } else {
+            localStorage.removeItem('guestlist_code');
+          }
+        } catch (e) {
+          console.error('Auth check failed', e);
+        }
+      } else {
+        // If no code, check if verification is even required (by trying empty code)
+        // If API returns valid for empty code, we are authenticated
+        try {
+          const res = await fetch('/api/verify-guestlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: '' })
+          });
+          if (res.ok) setIsAuthenticated(true);
+        } catch (e) { }
+      }
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const verifyCode = async (code: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/verify-guestlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+
+      if (res.ok) {
+        setIsAuthenticated(true);
+        setGuestlistCode(code);
+        localStorage.setItem('guestlist_code', code);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('code', code);
+        window.history.replaceState({}, '', newUrl.toString());
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
 
   const clubs = [
     {
@@ -159,6 +236,7 @@ export default function Home() {
     try {
       const formData = new FormData();
       formData.append('club', selectedClub);
+      formData.append('code', guestlistCode); // Send auth code
       if (imageFile) {
         formData.append('photo', imageFile);
       }
@@ -199,6 +277,14 @@ export default function Home() {
     }
   };
 
+  if (isCheckingAuth) {
+    return <div className="min-h-screen bg-black flex items-center justify-center text-cyan-500 font-mono">INITIALIZING SECURITY PROTOCOLS...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <GuestlistGatekeeper onVerify={verifyCode} />;
+  }
+
   return (
     <div className="min-h-screen bg-black relative">
       {/* Background Effects Container */}
@@ -234,7 +320,7 @@ export default function Home() {
             <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
             <span>SYSTEM ONLINE</span>
             <span className="text-gray-800">|</span>
-            <span>POWERED BY n8n + OpenAI</span>
+            <span>POWERED BY {process.env.NEXT_PUBLIC_WORKFLOW === 'n8n' ? 'n8n + ' : ''}OpenAI</span>
           </div>
         </header>
 
@@ -538,8 +624,8 @@ export default function Home() {
                 ${isSubmitting
                     ? 'bg-gray-900 border-gray-800 text-gray-600 cursor-not-allowed'
                     : uploadedImage
-                      ? 'bg-[#1a1a1a] text-white border-cyan-500 shadow-[0_0_40px_rgba(34,211,238,0.4)] hover:bg-[#252525] hover:border-cyan-400 hover:text-cyan-400 hover:scale-105 hover:shadow-[0_0_80px_rgba(34,211,238,0.6)] active:scale-95 active:shadow-[0_0_100px_rgba(34,211,238,0.8)]'
-                      : 'bg-[#1a1a1a] text-gray-600 border-white/5 cursor-not-allowed hover:border-white/10'
+                      ? 'bg-cyan-600 text-black border-cyan-400 font-black shadow-[0_0_60px_rgba(34,211,238,0.6)] hover:bg-cyan-500 hover:scale-[1.02] hover:shadow-[0_0_100px_rgba(34,211,238,0.8)] active:scale-95'
+                      : 'bg-gray-900/50 text-gray-600 border-white/5 cursor-not-allowed'
                   }
               `}
               >
@@ -551,7 +637,6 @@ export default function Home() {
                 ) : (
                   <span className="flex items-center justify-center gap-3 sm:gap-4 md:gap-6">
                     FACE THE BOUNCER
-                    <span className="text-3xl sm:text-4xl md:text-5xl">🚪</span>
                   </span>
                 )}
               </button>
@@ -564,7 +649,7 @@ export default function Home() {
           <div className="inline-block">
             <div className="h-px w-64 bg-gradient-to-r from-transparent via-white/30 to-transparent mb-6" />
             <p className="text-xs sm:text-sm text-gray-600 font-mono mb-2">
-              BUILT WITH NEXT.JS • n8n • OPENAI VISION
+              BUILT WITH NEXT.JS {process.env.NEXT_PUBLIC_WORKFLOW === 'n8n' ? '• n8n' : ''} • OPENAI VISION
             </p>
             <p className="text-xs text-gray-700 font-mono">
               A SATIRICAL AI AGENT FOR THE AGENT ROAST SHOW
